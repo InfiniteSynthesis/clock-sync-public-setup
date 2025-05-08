@@ -1,0 +1,14 @@
+\section{Model and Building Blocks}
+\label{sec:model}
+
+In this paper we adapt the timing and networking model of~\cite{EC:BGKRZ21} to the setting of proof of work, obviating the requirement for a PKI as a setup assumption.
+%
+In more detail, in the model there is an upper bound \delay in message transmission (cf.~\cite{JACM:DwoLynSto88,EC:PasSeeash17,C:BMTZ17,EPRINT:GarKiaLeo20}), and parties do not have access to a global clock, but instead rely on their local clocks, whose drift is assumed to be upper-bounded by \maxdrift.
+%
+What complicates matters is that the model supports dynamic participation where parties may join and leave during the protocol execution without warning (it is worth noting here that this is where the difficulty of our setting is derived from: indeed if all honest parties were online throughout then it would be trivial to implement a logical clock by incrementing a counter).
+%
+For succinctness, we choose to express primitives and building blocks (see below) in our execution model utilizing the ideal functionality language of~\cite{FOCS:Canetti01}, but we do not pursue a composability analysis for our security properties, which are expressed in a game based manner as in~\cite{EC:GarKiaLeo15,EC:PasSeeash17}.
+
+\input{content/model/imperfect-local-clock}
+\input{content/model/core-functionalities}
+\input{content/model/dynamic-participation}

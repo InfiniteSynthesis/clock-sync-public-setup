@@ -1,0 +1,32 @@
+\subsection{Imperfect Local Clocks}
+\label{subsec:imperfect-local-clock}
+
+As in~\cite{EC:BGKRZ21}, and as mentioned above, in this paper we remove the assumption that parties have access to a global clock, as in~\cite{EC:GarKiaLeo15,C:GarKiaLeo17,EC:PasSeeash17,C:BMTZ17,EPRINT:GarKiaLeo20}, and instead assume \emph{imperfect local clocks}.
+%
+In a nutshell, every honest party maintains a local clock variable by communicating with an imperfect local clock functionality \funcImpClock.
+%
+In contrast to the global-setup clock functionality in~\cite{TCC:KMTZ13}, where parties learn the exact global time and thus strong synchrony is guaranteed, parties registered with \funcImpClock will only receive ``ticks'' from the functionality to indicate that they should update their own clocks.
+%
+In addition, \funcImpClock issues ``imperfect'' ticks, i.e., the adversary is allowed to set a bounded additive drift to each party by manipulating its corresponding status variable in \funcImpClock.
+%
+\funcImpClock can be viewed as a variant from~\cite{EC:BGKRZ21}'s with adaptations to provide a more natural clock model with real-word resources and in the proof-of-work setting.
+
+For a detailed description of the functionality, see~\cref{section:model-contd}.
+%
+Here we just elaborate on the ``imperfect'' aspect of the clock and on the adversarial manipulation of clock drifts.
+%
+Specifically, we allow the adversary to set some drifts to parties' local clocks, which will accelerate or stall their progress; such values are globally bounded by \maxdrift.
+%
+This assumption allows local clocks to proceed at ``roughly'' the same speed.
+
+Further, the adversary \adv can adaptively manipulate the drift of honest parties' clocks by sending \textsc{clock-forward} and \textsc{clock-backward} messages to the functionality\footnote{As such, our clock functionality is a more natural model of the real world compared to~\cite{EC:BGKRZ21}'s, as it allows \adv to manipulate the clock in both directions, backward, and forward; in~\cite{EC:BGKRZ21}, only forward manipulation is allowed. Nonetheless, this does not result in a more powerful adversary.} after they conclude the current round.
+%
+If \adv issues \textsc{clock-forward} for party \party, it will enter a new local round before \funcImpClock updates the nominal time, and this can be repeated as long as \party's drift is not \maxdrift rounds larger than other honest parties.
+%
+On the other hand, if \adv issues \textsc{clock-backward}, it will set \party's budget to a negative value, thus preventing \funcImpClock from updating $d_\party$ at the end of the nominal round ($d_\party$ is the functionality variable that captures whether the party \party has made its move for the clock tick).
+%
+I.e., \party will still be in the same logical round during these two nominal rounds.
+%
+Again, this process can be repeated by \adv as long as the drift on \party is not \maxdrift rounds smaller than others.
+%
+As a consequence, the targeted party's local clock may remain static for several nominal rounds.

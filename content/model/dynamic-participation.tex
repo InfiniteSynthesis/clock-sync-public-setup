@@ -1,0 +1,62 @@
+\subsection{Dynamic Participation}
+\label{subsec:dynamic-participation}
+
+The notion of a ``respecting environment'' was introduced in~\cite{C:GarKiaLeo17} to model the varying number of participants in a protocol execution.
+%
+In~\cite{CCS:BGKRZ18,EC:BGKRZ21}, the notion of \emph{dynamic participation} was introduced aiming at describing the protocol execution in a more realistic fashion.
+%
+Here we present a further refined classification of possible \emph{types} of honest parties.
+%
+See~\cref{table:dynamic-participation}.
+
+\input{tables/dynamic-participation}
+
+Consider an honest party \party at a given point of the protocol execution.
+%
+We say \party is \emph{operational} if \party is registered with the random oracle \funcRO; otherwise, we say it is \emph{stalled}.
+%
+We say \party is \emph{online} if \party is registered with the network; \emph{offline} otherwise.
+%
+We say \party is \emph{time-aware} if \party is registered with the \emph{imperfect} clock functionality \funcImpClock, and \emph{time-unaware} otherwise.
+
+Further, we say \party is \emph{synchronized} if \party has been participating in the protocol for sufficiently long time and achieves a ``synchronized state'' as well as a ``synchronized clock.''
+%
+``Synchronized clock'' means \party holds a chain that shares a common prefix (cf.~\cite{EC:GarKiaLeo15}) with other \emph{synchronized} parties; ``synchronized clock'' refers to that \party maintains a local clock with time close to other \emph{synchronized} parties.
+%
+Otherwise, \party is \emph{desynchronized}.
+%
+Additionally, \party is aware of whether it is synchronized or not, and maintains a local variable \isSync serving as an indicator for other actions.
+
+Based on the above classification, we now define the notion of \emph{alert} parties:
+%
+\[ alert \defeq operational \wedge online \wedge time\text{-}aware  \wedge synchronized. \]
+%
+In short, alert parties are those who have access to all the resources and are synchronized; this requires them to join the protocol execution passively for some period of time.
+%
+They constitute the core set of parties that carry out the protocol.
+
+In addition, we define \emph{active} parties to include all parties that are alert, adversarial, and time-unaware.
+%
+\[ active \defeq alert \vee adversarial \vee time\text{-}unaware. \]
+
+\paragraph{Respecting environment in terms of computational power.}
+%
+Next, we provide the following generalization of ``respecting environment'' to relate it to computational power as opposed to number of parties.
+%
+Our assumption is that during the whole protocol execution, the honest computational power is higher than the adversarial one (cf. the ``honest majority'' condition in~\cite{EC:GarKiaLeo15} and follow-ups).
+%
+The computational power is captured by counting the number of RO (hash) queries that parties make in each round.
+%
+Further, we restrict the environment to fluctuate the number of such queries in a certain limited fashion.
+
+\begin{definition} \label{def:respecting-env}
+    For $\gamma \in \mathbb{R}^+$ we call the sequence $(h_r)_{r \in [0, B)}$, where $B \in \mathbb{N}$, $(\gamma, s)$-respecting if for any set $S \subseteq [0, B)$ of at most $s$ consecutive integers, $\max_{r \in S} h_r \le \gamma \cdot \min_{r \in S} h_r$.
+\end{definition}
+
+We say that \emph{environment \environment is $(\gamma, s)$-respecting} if for all \adv and coins for \environment and \adv the sequence of honest hash queries $(h_r)$ is $(\gamma, s)$-respecting.
+
+Note that the notion of respecting environment here is different from the ``flat'' model adopted in \cite{EC:GarKiaLeo15,C:GarKiaLeo17,EPRINT:GarKiaLeo20,C:BMTZ17}.
+%
+In a flat model, honest parties are assumed to have the same computational power, hence the total number of RO queries is a direct 1-to-1 map from the number of parties.
+%
+The new respecting environment allows some subset of the honest parties to query the RO multiple times or stay stalled during a nominal round and hence it adapts to the ``imperfect local clock'' model used in this paper.

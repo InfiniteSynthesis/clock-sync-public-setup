@@ -1,0 +1,42 @@
+\subsection{Other Core Functionalities}
+\label{subsec:core-functionalities}
+
+\paragraph{Common Reference String.}
+%
+We model a public-state setup by the CRS functionality \funcCRS.
+%
+The functionality is parameterized with some distribution $\mathcal{D}$ with sufficiently high entropy.
+%
+Once \funcCRS receives $(\textsc{Retrieve}, \sid)$ from either the adversary \adv or a party \party for the first time, it generates a string $d \gets \mathcal{D}$ as the common reference string.
+%
+In addition, \funcCRS will immediately send a message $(\textsc{Retrieved}, \sid)$ to functionality \wrapper{\funcRO} (described next) to indicate that \wrapper{\funcRO} should start to limit the adversarial RO queries.
+%
+For all subsequent activations, \funcCRS simply returns $d$ to the requester.
+
+\paragraph{(Wrapped) Random Oracle.}
+%
+By convention, we model parties' calls to the hash function used to generated proofs of work as assuming access to a random oracle; this is captured by the functionality \funcRO.
+%
+Notice that with regards to bounding access to real-world resources, functionality \funcRO as defined fails to limit the adversary on making a certain number of queries per round.
+%
+Hence, we adopt a functionality wrapper \cite{C:BMTZ17,EC:GKOPZ20} \wrapper{\funcRO} that wraps the corresponding resource to capture such restrictions.
+%
+We highlight that our wrapper \wrapper{\funcRO} improves on previous wrappers in two aspects, in order to provide a more natural model of the real world:
+%
+(i) We capture the pre-mining stage by letting the adversary query the RO with no restrictions (albeit polynomially bounded) before the CRS is released;
+%
+and (ii) The wrapper limits adversarial access per nominal round by bounding the total number of queries that \adv can make.
+%
+The second aspect allows us to dispose the ``flat'' computational model and define the computational power in terms of the number of RO queries per round, which makes it possible to further refine the notion of a ``respecting environment'' (see below) that is suited for imperfect local clocks.
+
+\paragraph{Diffusion network.}
+%
+We adopt the peer-to-peer communication functionality \funcDiffuse (cf.~\cite{EC:BGKRZ21}), which guarantees that an honestly sent message will be delivered to all the protocol participants within \delay rounds.
+%
+Moreover, for those adversarially generated messages, $\funcDiffuse^\delay$ forces them to be delivered to all the honest parties within $\delay$ rounds after they are learnt by at least one honest participant.
+%
+This captures the natural behavior of honest parties that they will forward all the messages that they have not yet seen to their peers.
+
+\medskip
+%
+We refer to~\cref{section:model-contd} for a detailed description of the above functionalities.

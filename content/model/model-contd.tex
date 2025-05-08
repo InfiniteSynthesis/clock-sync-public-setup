@@ -1,0 +1,131 @@
+\section{Model and Building Blocks (Cont'd)}
+\label{section:model-contd}
+
+\paragraph{Imperfect local clock functionality.}
+%
+Functionality \funcImpClock maintains an internal variable $\tau_\sid$ (the nominal time) to record how many times the sub-procedure \textit{Round-Update} resets the round status for suitable honest parties and other functionalities.
+%
+This variable will never be revealed to neither honest parties nor registered
+functionalities, which captures the fact that clocks are local, and it is only
+accessible by \funcImpClock, the environment \environment, the adversary \adv and the (wrapped) random oracle functionality\wrapper{\funcRO}, after they send a \textsc{clock-read} command.
+%
+Notably, \wrapper{\funcRO} has to know the exact nominal time in order to coordinate with the environment so as to apply restrictions on adversarial queries and model dynamic participation.
+%
+(More details on the wrapped RO functionality and the notion of a respecting environment below.)
+
+\funcImpClock also keeps track of the set of honest parties \partyset and the registered functionalities $F$.
+%
+For all honest parties and functionalities, \funcImpClock associates each of them with a bit variable $d \in \{0, 1\}$ which tracks if the corresponding party/functionality has claimed finishing its local round, and returns a response to command \textsc{clock-tick} to indicate whether the requester should update its local clock.
+%
+Importantly, every honest party \party is associated with a (possibly negative) integer $b_\party$ which indicates the ``tick budget'' allocated for \party during the current nominal round.
+%
+If no adversarial clock drift is set, at the end of a nominal round $b_\party$ is reset to 1 by \textit{Round-Update} and consumed by the party when \party sends \textsc{clock-update} in the next nominal round.
+%
+This captures the fact that, without adversarial manipulation, local clocks proceed with exactly the same speed.
+%
+Additionally, a (possibly negative) integer $\mathtt{drift}$ is associated with \party to record the total drift that is applied to its local clock.
+
+An honest party \party sends the \textsc{clock-update} command to \funcImpClock to indicate conclusion of its current local round.
+%
+The main purpose of this command is to set the variable $d$ associated with \party to 1 and consume one tick from its budget (i.e., $b_\party \gets b_\party - 1$).
+%
+When party \party is activated, it sends $(\textsc{clock-tick}, \sid)$ to \funcImpClock to check if its corresponding indicator $d$ has been reset to 0.
+%
+If this happens, \party updates its local clock and enters the next local round; otherwise, this implies that \party need to wait for other participants.
+
+Regarding the \textit{Round-Update} procedure, \funcImpClock will update the nominal time only when (i) all honest parties and registered functionalities have claimed finishing the current round (i.e., the corresponding indicator $d = 1$), and (ii) all the tick budgets allocated to honest parties have been consumed (i.e., $b_\party \le 0$ for every party).
+%
+When the party/functionality statuses pass the above checks, \textit{Round-Update} moves the nominal time forward ($\tau_\sid \gets \tau_\sid + 1$).
+%
+Then, \textit{Round-Update} issues a new tick budget for all honest parties (i.e., all budget variables $b$ are increased by 1); afterwards, for all registered functionalities and honest parties whose $b_\party$ is positive, their $d$ indicators are reset to 0.
+
+Next, we elaborate on the ``imperfect'' aspect of the clock and on the adversarial manipulation of clock drifts.
+%
+Specifically, in addition to \textit{Round-Update}, we also allow the adversary to set some drifts to parties' local clocks, which will accelerate or stall their local clock; such values are globally bounded by \maxdrift.
+%
+This assumption allows local clocks to proceed at ``roughly'' the same speed.
+
+Further, the adversary \adv can adaptively manipulate the drift of honest parties' clocks by sending \textsc{clock-forward} and \textsc{clock-backward}\footnote{As such, our clock functionality is a more natural model of the real world compared to \cite{EC:BGKRZ21}'s, as it allows \adv to manipulate the clock in both directions, backward, and forward; in \cite{EC:BGKRZ21}, only forward manipulation is allowed. Nonetheless, this does not result in a more powerful adversary.} after they conclude the current round.
+%
+If \adv issues \textsc{clock-forward} for party \party, it will enter a new local round before \funcImpClock updates the nominal time, and this can be repeated as long as \party's drift is not \maxdrift rounds larger than other honest parties.
+%
+On the other hand, if \adv issues \textsc{clock-backward}, it will set \party's budget to a negative value, thus preventing \funcImpClock from updating $d_\party$ at the end of the nominal round.
+%
+I.e., \party will still be in the same logical round during these two nominal rounds.
+%
+Again, this process can be repeated by \adv as long as the drift on \party is not \maxdrift rounds smaller than others.
+%
+As a consequence, the targeted party's local clock may remain static for several nominal rounds.
+
+\input{functionalities/imperfect-clock}
+
+\paragraph{Global random oracle functionality and its wrapper.}
+%
+By convention, we model parties' calls to the hash function used to generated proofs of work as assuming access to a random oracle; this is captured by the functionality \funcRO.
+%
+\funcRO internally maintains an updatable table $H$; it is parameterized with security parameter $\kappa$ as $H$'s output length.
+%
+Upon receiving a query $(\textsc{eval}, \sid, x)$, if $H(x) = \bot$ (i.e., no pair of the form $(x, \cdot)$ is in $H$), a value $y$ is chosen uniformly at random from $\{0, 1\}^\kappa$ and returned to the party (\funcRO also updates $H(x) = y$).
+%
+If $H(x) \neq \bot$ (i.e., $x$ has been queried before), the corresponding $y$ is returned.
+
+\input{functionalities/random-oracle}
+
+Notice that with regards to bounding access to real-world resources, functionality \funcRO as defined fails to limit the adversary on making a certain number of queries per round.
+%
+Hence, we adopt a functionality wrapper \cite{C:BMTZ17,EC:GKOPZ20} \wrapper{\funcRO} that wraps the corresponding resource to capture such restrictions.
+%o
+We highlight that our wrapper \wrapper{\funcRO} improves on previous wrappers in two aspects, in order to provide a more natural model of the real world:
+%
+\begin{cccItemize}[noitemsep]
+      \item We capture the pre-mining stage by letting the adversary query the RO with no restrictions before the CRS is released.
+      %
+      More specifically, \wrapper{\funcRO} is initialized with internal time counter $\tau = 0$, and the adversary can make as many queries as he wants (albeit polynomially bounded) and the wrapper simply forwards all these queries to \funcRO as long as $\tau = 0$.
+      %
+      This pre-mining stage ends when the time counter $\tau$ is set to $1$, which happens immediately after \wrapper{\funcRO} receives $(\textsc{Retrieved}, \sid)$ from the CRS functionality \funcCRS.
+
+      This pre-mining stage captures the fact that a hash function is usually available before the protocol execution begins.
+      %
+      Nonetheless, thanks to the CRS with sufficiently high entropy, all adversarial queries made during the pre-mining stage can benefit the adversary in the later execution only with negligible probability.
+
+      \item The wrapper limits adversarial access per nominal round by bounding the total number of queries that \adv can make.
+      %
+      After the CRS is released, \wrapper{\funcRO} keeps track of the corrupted party set.
+      %
+      Upon receiving queries from corrupted parties, \wrapper{\funcRO} first checks if \funcImpClock advances the nominal time (\wrapper{\funcRO} can directly access \funcImpClock's internal time counter).
+      %
+      If \funcImpClock enters the next round, \wrapper{\funcRO} updates its internal clock counter as well and resets the RO counter $h_\tau$
+      to 0.
+      %
+      As long as $q_\adv < h_\tau$, where $h_\tau$ is a predetermined value provided by the environment \environment for nominal round $\tau$, \wrapper{\funcRO} forwards the queries to \funcRO.
+      %
+      When $q_\adv \ge h_\tau$, which implies that the adversary has
+      consumed all its allowed budget, the wrapper stops interaction with
+      the adversary.
+
+      This ``migration'' from the $q$-bounded adversarial model (\cite{EC:GarKiaLeo15} and follow-ups) to bounding the total number of queries that \adv can make allows us to dispose of the ``flat'' computational model considered in previous works.
+      %
+      We now define the computational power in terms of the number of RO queries per round, which makes it possible to further refine the notion of a ``respecting environment'' that is suited for imperfect local clocks.
+\end{cccItemize}
+
+\input{functionalities/random-oracle-wrapper}
+
+\paragraph{Common reference string.}
+%
+We model a public setup by the CRS functionality \funcCRS.
+
+\input{functionalities/crs}
+
+\paragraph{Diffusion functionality.}
+%
+There are three types of messages that are exchanged in the network: blockchain messages (e.g., when a party mines a new block); regular messages (usually transactions), which are diffused to the network when received by the environment; and synchronization beacons---a special message that parties will use to perform the local time adjustment.
+%
+For simplicity, we follow the convention that each type of messages is diffused by its own network.
+%
+We denote the network functionality disseminating blockchain information by $\funcDiffuse^{\mathsf{bc}}$; the one diffusing transactions by $\funcDiffuse^{\mathsf{tx}}$; and the one circulating synchronization beacons by $\funcDiffuse^{\mathsf{sync}}$, respectively.
+%
+Parties will communicate with $\funcDiffuse^{\mathsf{bc}}$ and $\funcDiffuse^{\mathsf{tx}}$ to receive new chains and transactions in \textsf{FetchInformation}, and they will receive synchronization beacons by sending requests to $\funcDiffuse^{\mathsf{sync}}$ in \textsf{ProcessBeacons}.
+%
+Refer to \cref{subsec:fetch-information,subsec:process-beacons-arrival-times} for further details.
+
+\input{functionalities/diffuse}
