@@ -1,0 +1,52 @@
+\section{Introduction}
+\label{sec:introduction}
+
+In the classical clock synchronization problem, thoroughly studied over the past four decades by the distributed computing community---non-exhaustively, \cite{CACM:Lam78,PODC:LamMel84,PODC:HSSD84,JCSS:DHS86,JACM:SriTou87,InfComp:LynWel88,FC:ADDNR19,PODC:LenLos22}---, a set of processors, each one possessing a timer that is within a bounded rate of drift from ``nominal time'' (the real time---called Newtonian time in \cite{JCSS:DHS86}), should realize logical clocks that are within a distance $\mathsf{Skew}\in \mathbb{N}$ of each other and within a linear envelope of nominal time.
+%
+The typical threat model involves a subset of parties who deviate arbitrarily either from correct protocol execution or in terms of their clock speed and may as a result prevent synchronization from happening.
+%
+A clock synchronization protocol has parties exchanging messages to suitably adjust their clocks so that the synchronization condition is achieved.
+
+Up until the work of~\cite{EC:BGKRZ21} all prior work in clock synchronization assumed that the number of parties are known during the protocol execution (and available, unless they are assumed adversarial\footnote{We note that the problem of joining parties in the context of clock synchronization was considered, but  only conditionally on the new party agreed upon and approved by a sufficient number of participants; see~\cite{PODC:HSSD84}.}).
+%
+This standard assumption in Byzantine fault tolerance protocols was challenged first with the advent of the Bitcoin blockchain and related ``permissionless'' protocols.
+%
+As exemplified in~\cite{C:GarKiaLeo17,EPRINT:GarKiaLeo20}, the Bitcoin blockchain operates in a setting where the number of active parties may be unknown and continuously fluctuating throughout the protocol execution.
+%
+While such results paved the way to rethink the problem of consensus in this setting (cf.~\cite{CSF:PasShi17,RSA:GarKia20}), near perfectly synchronized clocks remained a central assumption in all previous security analyses of blockchain protocols (cf.~\cite{EC:GarKiaLeo15,C:BMTZ17,EC:PasSeeash17,C:GarKiaLeo17,EPRINT:GarKiaLeo20}).
+
+In the setting where participation is dynamic and fluctuating over time, the adversary can introduce and remove honest parties at will without notifying the existing participants.
+%
+As a result, existing clock synchronization algorithms (e.g.,~\cite{JACM:SriTou87,FC:ADDNR19,PODC:LenLos22}) do not directly translate to such permissionless setting because they fundamentally rely on the fact that the parties are aware of the number of parties as well as of the number of tolerated corruptions/faults---i.e., they are able to \emph{count}---and a different protocol design technique is needed.
+
+The main challenge in this transient participation setting shifts from correcting the bounded-rate drift occurring between the ever connected honest parties over time to the task of bringing up to sync freshly joining parties who start without any information about nominal time, while accommodating for the fact that a (possibly large) number of honest parties is no longer active.
+%
+In~\cite{EC:BGKRZ21}, assuming a so-called private-state setup \cite{RSA:GarKia20} (specifically, a PKI), a protocol called ``Ouroboros Chronos'' is presented that can synthesize a notion of global time using a continuous flow of clock measurements that are provided by parties who only transiently participate in the protocol and their local clocks are assumed to be correct up to a bound.
+%
+The level of participation fluctuates broadly with the only requirements that (i) it does not become negligible, and (ii) honest majority is preserved in terms of  stake (all parties have a number of coins associated to their public keys that amount to their individual stake).
+%
+Given this, their result leaves open the question of only utilizing a public(-state) setup.
+
+To our knowledge, the only known result with a public setup in the permissionless setting, again from~\cite{EC:BGKRZ21}, is that parties may use a Nakamoto-style longest chain blockchain without difficulty adjustment and use the block index to define a concept of global time.
+%
+The obvious downside of this idea is that the protocol execution speeds up and slows down as participation fluctuates and, most importantly, it will be entirely insecure when there is a steady increase (or decrease) of participants, making the construction essentially only suitable for a static model where the number of parties (i.e., the computational power invested in the system for proof of work) remains fixed.
+
+This motivates the current work, where the following open question is being
+tackled:
+%
+\begin{quote}
+    \em Is it possible for a dynamically changing population of peers to synchronize their clocks utilizing only a public setup and assuming PoW?
+\end{quote}
+
+One apparent difficulty in answering this question is that using a blockchain protocol to derive consistency for clock adjustments runs into the complication that the blockchain protocol itself utilizes a clock to adjust the PoW difficulty at regular intervals.
+%
+Indeed, the Bitcoin blockchain \cite{Nak08} relies fundamentally on a global clock being available to all parties.\footnote{The protocol implements such clock by having nodes querying other nodes in the network and possibly seeking user input --- it has no way of deriving a clock from the protocol operation itself. See~\cite{EPRINT:GarKiaLeo20} for more details.}
+%
+It follows that this observation suggests also a secondary open question that
+will be tackled as well:
+%
+\begin{quote}
+    \em Is there a blockchain protocol in the PoW setting that has no dependency on a publicly accessible global clock?
+\end{quote}
+
+\input{content/introduction/results-overview}

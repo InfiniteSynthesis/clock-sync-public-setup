@@ -1,0 +1,119 @@
+\subsection{Overview of Our Results}
+\label{subsec:results-overview}
+
+The clock synchronization problem asks parties to report clocks that satisfy two properties\footnote{In the conference version of this paper, we used term ``bounded skews'' and ``linear envelope synchronization'' following~\cite{JCSS:DHS86}.}
+%
+(i) \emph{Precision:} the parties maintain logical clocks whose difference is upper bounded, and (ii) \emph{Accuracy:} the logical clock reported by a party is always within a \emph{linear envelope} of the nominal time.
+%
+Note that we are interested in a formulation of this problem in a very general setting where some parties are adversarial and hence deviate from the protocol arbitrarily, while honest parties may come and go following arbitrary participation patterns.
+%
+Given this setting we formulate the \emph{desideratum} of a synchronized clock only with respect to a class of parties we call \emph{alert}, which are honest parties that have also been online for a sufficiently long time to catch up with all protocol messages.
+%
+More formally, the clock synchronization problem is stated as follows.
+
+\begin{definition}
+    [Clock Synchronization]
+    \label{def:clock-properties}
+
+    There exist constants $\mathsf{Skew}\in \mathbb{N}$, $\mathsf{shiftLB},\mathsf{shiftUB}\in (0,1)$ such that honest parties' logical clocks satisfy the following two properties:
+    %
+    \begin{cccItemize}[nosep]
+        \item \emph{\textbf{Precision.}}
+        %
+        Let $\round_1, \round_2$ be the reported logical clocks of two alert parties at any nominal time $r$.
+        %
+        Then $|\round_ 1 - \round_2| \le \mathsf{Skew}$.
+
+        \item \emph{\textbf{Accuracy.}}
+        %
+        Each alert party's logical clock stays in a $(U, L)$-linear envelope\footnote{A function $f: \mathbb{R} \rightarrow \mathbb{R}$ is within a $(U, L)$-linear envelope if and only if it holds that $L \cdot x - c \leq f(x) \leq U \cdot x + c$, where $c$ is a constant and $x \in \mathbb{R}^+$.} with respect to the nominal time $r$, where $U = 1 / (1 - \mathsf{shiftUB})$ and $L = 1 / (1 + \mathsf{shiftLB})$.
+    \end{cccItemize}
+\end{definition}
+
+Solving the clock synchronization problem asks for a protocol that within a certain threat model achieves the two properties.
+%
+This brings us to our first main result.
+
+\smallskip\noindent\emph{A model for permissionless clock synchronization in the PoW setting.}
+%
+Our model (\cref{sec:model}) simultaneously facilitates (i) the dynamic participation of parties, (ii) imperfect local clocks, and (iii) resource bounding by restricting parties' queries to a random oracle (cf.~\cite{EC:GKOPZ20}).
+%
+Specifically, we extend the previous model of the global imperfect clock of~\cite{EC:BGKRZ21} to the PoW setting by introducing a random oracle functionality that apportions random oracle queries per unit of time between the honest parties and the adversary in a manner consistent with an honest majority assumption in terms of computational power.
+%
+The concept of time provided by the imperfect local clock functionality of~\cite{EC:BGKRZ21} enables parties to advance their local clocks and experience time at roughly the same speed (a maximum drift of \maxdrift is allowed).
+%
+Note that the environment is allowed to introduce new parties and remove old parties at will, something that results in them being de-registered from the clock functionality; when this happens the clock functionality is not responsible for keeping them up to speed with the rest of the honest parties.
+%
+In this way, parties can be seen as entirely transiently engaging with the protocol---each individual party may only engage for a small fraction of the total execution time as adaptively decided by the environment.
+%
+Armed with our model, we then present our second main result.
+
+\smallskip\noindent\emph{A new protocol for permissionless clock synchronization in the PoW model}.
+%
+We describe our new PoW-based clock synchronization protocol \timekeeper in~\cref{sec:protocol-details}.
+%
+The construction is based on three key ingredients:
+%
+(i) A mechanism that repurposes the concept of 2-for-1 PoWs introduced in~\cite{EC:GarKiaLeo15} and subsequently used to achieve various properties such as fairness in~\cite{PODC:PasShi17} and high throughput in~\cite{CCS:BKTFV19}, to the setting of time-keeping by employing it to enable the collection of ``timing beacons'' from the active parties in a rolling window process;
+%
+(ii) a PoW-based longest-chain type of blockchain that enables parties at regular intervals to reach consensus about the timing beacons that are shared and extract a suitable correction to their local clocks taking into account the arrivals of the beacons;
+%
+and (iii) a novel target-recalculation function that can be thought of as the \emph{reverse} of the one used in Bitcoin,  that uses protocol recorded timestamps as a means to define the length of an epoch, and then uses the number of blocks produced in that period of time to adjust the PoW difficulty accordingly.
+
+Putting these elements together, our clock synchronization protocol instructs parties when their local clock passes some specific moment (which happens periodically with respect to the interval length) to execute an adjustment on their local clock based on the median value of the beacon timestamps and their corresponding arrival time.
+%
+Moreover, towards the goal of letting newly joining parties become synchronized with the protocol time, we present a joining procedure which requires the fresh parties to passively listen to the protocol execution for a while and then synchronize with other honest participants.
+
+Based on the ledger consensus function offered by our protocol it is easy to derive also the following result.
+
+\smallskip\noindent\emph{A new PoW-based blockchain protocol without a global clock.}
+%
+Given that our protocol is a Nakamoto-style ``most-difficult chain'' type of protocol that facilitates clock synchronization, it is easy to transform it to a full-fledged blockchain protocol that admits transactions as in Bitcoin script or Ethereum smart contracts.
+%
+The resulting blockchain has the novel property that it does not depend on accessing a globally available clock.
+%
+Instead, parties utilize their local clocks which may be drifting or be out of sync, but thanks to the synchronization (sub-)protocol that is offered by our construction they can adjust their local clocks periodically.
+%
+This eliminates time as an attack vector in the context of PoW-based blockchain protocols and demonstrates that it is possible to achieve ledger consensus using merely local clocks in a fully dynamic setting where parties may come and go adaptively per the adversary's instructions.
+
+\smallskip\noindent\emph{Security analysis.}
+%
+We present the full security analysis of \timekeeper in~\cref{sec:protocol-analysis}.
+%
+As a high-level overview, we proceed to adapt the analytical toolset from~\cite{C:GarKiaLeo17,EPRINT:GarKiaLeo20} to the imperfect-local-clock model.
+%
+Notably, we modify the concept of target recalculation epoch boundaries (from ``point'' to ``zone'') and the concept of isolated successes (which addresses the question of under what circumstances can a hash success guarantee the increase of accumulated difficulty).
+%
+As an intermediate step, we study several predicates aiming at providing the ``good'' properties of an execution starting from the onset and until a given nominal round.
+
+Our inductive-style proof works in the following manner.
+%
+We prove that if at the onset, the PoW difficulty is appropriately set and the steady block-generation rate lasts during the whole clock synchronization interval, parties can maintain good skews after they enter the next interval and the shift value they compute to adjust their clocks  is properly bounded.
+%
+In addition, if good skews and certain time adjustment calculations are maintained during a target recalculation epoch, the block production rate will be properly controlled in the next epoch.
+%
+To sum up, this guarantees that ``good'' properties can be achieved during the whole execution given a ``safe'' start and a bounded change in the number of parties (which can nevertheless still be exponential).
+%
+We also provide an analysis of the joining procedure showing that joining parties starting with no \emph{a-priori} knowledge of global time, can listen in and bootstrap their logical clock,  turning themselves into \emph{alert} parties being capable of fully engaging with the protocol.
+
+In summary, \timekeeper solves the clock synchronization problem as defined above as follows.
+
+\begin{theorem*}[Informal, restated from \cref{thm:clock-properties}]
+    Let \maxdrift be the maximum drift allowed on parties' local clocks and \delay the maximum (and unknown) message transmission delay.
+    %
+    Then \timekeeper solves the clock synchronization problem assuming bounded dynamic participation and an honest majority in terms of random oracle queries, with parameter values
+    %
+    \[ \mathsf{Skew} = 2\maxskew,~~ \mathsf{shiftLB} = 3\maxskew / \syncLen, ~\text{and}~~ \mathsf{shiftUB} = 2\maxskew / \syncLen, \]
+    %
+    where $\maxskew = \delay + \maxdrift$ and $\syncLen \in \mathbb{N}^+$ is a parameter chosen sufficiently large w.r.t. the security parameter and reflects the time required for an honest party to become alert.
+\end{theorem*}
+
+\paragraph{Organization of the paper.}
+%
+The rest of the paper is organized as follows.
+%
+In~\cref{sec:model} we present our model, relevant definitions and building blocks.
+%
+We describe our \timekeeper protocol in~\cref{sec:protocol-details} and present the full analysis in~\cref{sec:protocol-analysis}.
+%
+Detailed description of protocols, functionalities, and some of the proofs can be found in the appendix.
