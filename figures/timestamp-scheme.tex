@@ -1,0 +1,31 @@
+\begin{figure*}[ht]
+    \centering
+    \tikzstyle{tbblock} = [rectangle, text=white, inner sep = .6em]
+
+    \begin{tikzpicture} \footnotesize
+        \node[tbblock, fill=kanade!70] (block1) {$\langle 1, 90 \rangle$};
+        \node[tbblock, kanade, anchor = east] at ([xshift = -.25cm]block1.west) (block0) {\ldots};
+        \node[tbblock, fill=kanade!70, anchor = west] at ([xshift = .25cm]block1.east) (block2) {$\langle 1, 99 \rangle$};
+        \node[tbblock, fill=kanade!90, anchor = west] at ([xshift = .25cm]block2.east) (block3) {$\langle 2, 95 \rangle$};
+        \node[tbblock, fill=kanade!90, anchor = west] at ([xshift = .25cm]block3.east) (block4) {$\langle 2, 99 \rangle$};
+        \node[tbblock, fill=kanade!90, anchor = west] at ([xshift = .25cm]block4.east) (block5) {$\langle 2, 108 \rangle$};
+        \node[tbblock, kanade, anchor = west] at ([xshift = .25cm]block5.east) (block6) {\ldots};
+
+        \foreach \x [count=\xi from 1] in {0, 1, ..., 5}
+            {
+                \draw[->, thick, kanade] (block\xi.west) -- (block\x.east);
+            }
+
+        \node[fill = kanade!70, minimum width = 1em, minimum height = 1em, anchor = west] at ([xshift = 4em, yshift = .75em]block5.east) (note11) {};
+        \node[anchor = west] at ([xshift = 5.2em, yshift = .75em]block5.east)  (note12) {Blocks in interval 1};
+        \node[fill = kanade!90, minimum width = 1em, minimum height = 1em, anchor = west] at ([xshift = 4em, yshift = -.75em]block5.east) (note21) {};
+        \node[anchor = west] at ([xshift = 5.2em, yshift = -.75em]block5.east)  (note22) {Blocks in interval 2};
+
+        \begin{scope}[on background layer]
+            \node[fit = (note11) (note22), draw = kanade, rectangle, inner sep = .4em] (scope1) {};
+        \end{scope}
+    \end{tikzpicture}
+
+    \caption{An illustration of a segment of the blockchain with synchronization interval length $\syncLen = 100$. Blocks can have timestamp values equal to blocks in the previous interval.}
+    \label{fig:timestamp-retortion}
+\end{figure*}

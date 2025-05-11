@@ -1,0 +1,80 @@
+\subsection{2-for-1 Proofs of Work and Synchronization Beacons}
+\label{subsec:2-for-1-pow-sync-beacons}
+
+\emph{2-for-1 PoW} is a technique that allows protocols to utilize a single random oracle $H(\cdot)$ to compose two separate PoW sub-procedures involving two distinct and independent random oracles $H_0(\cdot), H_1(\cdot)$.
+%
+It was first proposed in~\cite{EC:GarKiaLeo15} in order to achieve a better/optimal corruption threshold (from one-third to one-half) for the solution of the traditional consensus problem using a blockchain.
+
+We refer to \cite{EC:GarKiaLeo15} for more details, and here we present a simple implementation with the clock synchronization application in mind.
+%
+In order to do the 2-for-1 mining, a party \party prepares a composite input $w$ that is a concatenation of two inputs $w_0, w_1$ of two different sub-procedures $S_0, S_1$, respectively.
+%
+I.e., $w = w_0 \concat w_1$.
+%
+After selecting a nonce $ctr$, querying the random oracle with $ctr \concat w$ and getting result $u$, \party checks if $u < T$ which implies success in sub-procedure $S_0$; \party also checks if $\stringRev{u} < T$ (where \stringRev{u} denotes the reverse of a bit-string $u$) which indicates success in sub-procedure $S_1$.
+%
+After successfully generating a PoW for $S_0$ (resp., $S_1$), in order to let parties others check validity, the proof will include the nonce and the entire composite input $ctr \concat w$.
+%
+Note that sub-procedure $S_0$ (resp., $S_1$) only cares about its corresponding part $w_0$ (resp., $w_1$), and treat the other part as dummy information.
+
+The 2-for-1 PoW technique has several advantages when compared with the straightforward approach that would simply utilize two different random oracles.
+%
+The most prominent advantage is that it prevents the adversary \adv from concentrating its computational power on one RO and thus gain advantage in the corresponding sub-procedure.
+
+\paragraph{Synchronization beacons.}
+%
+In addition to the conventional blocks constituting the blockchain, protocol participants in \timekeeper also produce another type of ``tiny'' blocks using 2-for-1 PoWs.
+%
+We call these blocks \emph{clock synchronization beacons} (``beacons'' for short) since they are used to report parties' local time and synchronize their clocks.
+
+In more detail, one clock synchronization beacon \beacon is a tuple with the following structure:
+%
+\[ \beacon \triangleq \langle \protocolTime{\interval}{\round}, \party, \eta_\interval, ctr, blockLabel \rangle, \]
+%
+where \protocolTime{\interval}{\round} is the local time \beacon reports; \party denotes the identity of its miner; $\eta_\interval$ is some fresh randomness in the current interval; $ctr$ represents the nonce of the PoW and $blockLabel$ is the associated block input.
+%
+Note that \beacon must record the identity of its miner because there might be multiple beacons, mined by different parties, reporting the same timestamp as well as nonce value; otherwise, it would be impossible for the parties to distinguish such beacons.
+%
+Worse still, other participants would not be able to distinguish the same beacon \beacon when they receive \beacon multiple times.
+%
+Regarding $\eta_\interval$, it is a string associated with interval \interval for the purpose of preventing the adversary \adv from mining beacons with \emph{future} timestamps.
+%
+In other words, protocol participants (including \adv) can only learn $\eta_\interval$ after they have (almost) finished interval $\interval - 1$.
+%
+We present the structure of intervals in detail and how we compute $\eta_\interval$ in~\cref{subsec:intervals-and-sync-procedure} and treat it as a communal bit-string here.
+%
+We note that parties can learn $\eta_\interval$ from their local chain, and indeed \beacon does not need to include $\eta_\interval$ (\party can prune those beacons that are invalid with $\eta_\interval$ in their local view).
+%
+We keep $\eta_\interval$ in the description for convenience.
+
+Regarding the structure of a blockchain block \block, we adopt the similar structure as in~\cite{C:GarKiaLeo17} (with the dummy information in the 2-for-1 PoWs):
+%
+\[ \block \triangleq \langle h, \st, \protocolTime{\interval}{\round}, ctr, txLabel \rangle, \]
+%
+where $h$ is the reference to the previous block, \st the Merkle root of the block content, \protocolTime{\interval}{\round} its timestamp, $ctr$ the nonce of PoW, and $txLabel$ the bound beacon input.
+
+We are now ready to describe how the parties in \timekeeper do the 2-for-1 PoW mining.
+%
+The composite input prepared in \timekeeper is different from the trivial instance above, in that the term \protocolTime{\interval}{\round} appears in both blocks and beacons.
+%
+Hence, simply concatenating two inputs introduces redundant information in the PoW.
+%
+When a party \party is ready to perform the mining procedure, \party binds the nonce, the blocks' input and beacon input together as
+%
+\[ \langle ctr, h, \st, \protocolTime{\interval}{\round}, \party, \eta^\chain_\epoch \rangle \]
+%
+and hand them over to random oracle \funcRO.
+%
+Let $u$ denote the result from \funcRO.
+%
+If $u < T$ (i.e., the block query succeeds), \party finds a new block $\block = \langle h, \st, \protocolTime{\interval}{\round}, ctr, txLabel \rangle$ where $txLabel = \langle \party, \eta^\chain_\epoch \rangle$;
+%
+if $\stringRev{u} < T$ (the beacon query succeeds), \party gets a new beacon $\beacon = \langle \protocolTime{\interval}{\round}, \party, ctr,\allowbreak blockLabel \rangle$, where $blockLabel = \langle h, \st \rangle$.
+%
+Note that for the sake of presentation, we reorder the content of blocks and beacons so that they are inconsistent with the input to the PoW.
+
+After receiving the result from \funcRO, \party checks if it was able to successfully generate a new block.
+%
+In addition, \party checks if he successfully produces a beacon but only when \party's local clock stays in the \emph{beacon mining and inclusion} phase.
+%
+Namely, \party reports a timestamp that satisfies a certain criterion (details in~\cref{subsec:intervals-and-sync-procedure}).

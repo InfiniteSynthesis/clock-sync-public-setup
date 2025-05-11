@@ -1,0 +1,81 @@
+\subsection{The Target Recalculation Function}
+\label{subsec:target-recalculation-function}
+
+If the mining target is not set appropriately (``appropriately'' means that the block generation rate according to the current hashing power and target is somewhat steady; see~\cite{C:GarKiaLeo17}), PoW-based blockchain protocols fail to maintain any of the security properties in a permissionless environment.
+%
+In Bitcoin, the target is adjusted after receiving the last block of the current epoch (and an epoch consists of 2016 blocks).
+%
+Based on the time elapsed to mine these blocks, a new target is set based on the previous target value and the variation is proportional to the time elapsed.
+%
+Note that Bitcoin's target recalculation function is not the only way to adjust the difficulty level.
+%
+A large number of other recalculation functions have been proposed in alternate blockchains (e.g., Ethereum, Bitcoin Cash, Litecoin), with their security asserted by either theoretical analysis or empirical data.
+
+In \timekeeper, we propose a new target recalculation function that is suitable for the new setting.
+%
+Intuitively, our function is a reversed version of Bitcoin's original function, namely, protocol participants wait for some fixed number of rounds \diffLen (in their local view) to update the difficulty level.
+%
+We call such \diffLen number of rounds a {\em target recalculation epoch}.
+%
+Moreover, \timekeeper sets \diffLen as a multiple of \syncLen, which makes the target recalculation epoch consist of several clock synchronization intervals, and the start and end point of an epoch coincide with the start and end of different synchronization intervals.
+%
+Recall that in the \timekeeper timestamp scheme introduced in~\cref{subsec:protocol-timestamps}, the first term in \protocolTime{\interval}{\round} does not directly reflect which target recalculation epoch it is in.
+%
+For simplicity, we introduce function \textsf{TargetRecalcEpoch} that maps the protocol timestamp to the target recalculation epoch it belongs to:
+%
+\[ \mathsf{TargetRecalcEpoch}(\protocolTime{\interval}{\round}) \triangleq \lceil \interval / (\diffLen / \syncLen) \rceil. \]
+%
+In addition, we introduce a function \textsf{EpochBlocks} which extracts all the blocks in chain \chain that belong to target recalculation epoch \epoch.
+%
+Formally, given $\epoch \ge 1$,
+%
+\[ \mathsf{EpochBlocks}(\chain, \epoch) \triangleq \{ \block : \block \in \chain \wedge \mathsf{TargetRecalcEpoch}(\timestamp{\block}) = \epoch \}. \]
+%
+Also for convenience, we let \textsf{EpochBlockCount} be a function that returns the number of blocks in chain \chain that belong to epoch \epoch.
+%
+We also extend the input domain of epoch numbers to 0 and let it output $\varLambda_{\mathsf{epoch}}$ (the ideal number of blocks) to capture the fact that the target at the beginning of an execution is set appropriately and hence maintains the ideal block generation rate.
+%
+Formally,
+%
+\begin{equation} \label{eq:epochblockcount}
+    \mathsf{EpochBlockCount}(\chain, \epoch) \triangleq
+    \left\{
+    \begin{aligned}
+         & |\mathsf{EpochBlocks}(\chain, \epoch)| \\
+         & \varLambda_{\mathsf{epoch}}
+    \end{aligned}
+    \right.
+    ~~
+    \left.
+    \begin{aligned}
+         & if~\epoch \ge 1 \\
+         & if~\epoch = 0
+    \end{aligned}
+    \right.
+\end{equation}
+
+Going back to the algorithm, for the first epoch ($\epoch  = 1$) parties will adopt the target value of the genesis block ($T_0$). I.e., $T_ 1 = T_ 0$.
+%
+Regarding other epochs ($\epoch > 1$), parties will figure out how many blocks are produced in the previous epoch, and set the next target based on the previous one.
+%
+This variation is proportional to the ratio of expected number of blocks $\varLambda_{\mathsf{epoch}}$ and the actual number.
+%
+I.e., for epoch $\epoch + 1$,
+%
+\begin{equation} \label{eq:next-target}
+    T_{\epoch + 1} \triangleq \frac{\varLambda_{\mathsf{epoch}}}{\varLambda} \cdot T_\epoch, ~~ \epoch \in \mathbb{N}^+,
+\end{equation}
+%
+where $\varLambda$ is the number of blocks in epoch \epoch---in other words, the size of $\mathsf{EpochBlocks}(\chain, \epoch)$.
+
+In order to prevent the ``raising difficulty attack'' \cite{EPRINT:Bahack13}, the maximal target variation in a single recalculation step still needs to be bounded (we denote this bound by $\tau$).
+%
+Specifically, if $\varLambda > \tau \cdot \varLambda_{\mathsf{epoch}}$, $T_{\epoch + 1}$ will be set as $T_\epoch / \tau$; on the other hand, if $\varLambda < \varLambda_{\mathsf{epoch}} / \tau$, $T_{\epoch + 1}$ will be set as $\tau \cdot T_\epoch$.
+
+\begin{remark}
+    We observe that, compared to the Bitcoin case, the adversary \adv in \timekeeper is in a much worse position to carry out the raising difficulty attack.
+    %
+    This is because in Bitcoin, in order to significantly raise the difficulty in the next epoch, \adv only needs to mine 2016 blocks with close timestamps; in the case of \timekeeper, however, the adversary has to mine $\tau \cdot \varLambda_{\mathsf{epoch}}$ blocks (with fake timestamps) in order to raise the same level of difficulty.
+    %
+    The number of blocks that \adv needs to prepare is $\tau$ times larger than that in Bitcoin (assuming both protocols share the same number of expected blocks in an epoch).
+\end{remark}

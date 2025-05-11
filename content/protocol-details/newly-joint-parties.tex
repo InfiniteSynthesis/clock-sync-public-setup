@@ -1,0 +1,72 @@
+\subsection{Newly Joining Parties}
+\label{subsec:newly-joint-parties}
+
+Recall that \timekeeper runs in a permissionless environment where parties can join and leave at will.
+%
+As such, it is essential that newly joining parties can learn the protocol time to become alert and participate in the core mining process.
+%
+More specifically, after the joining procedure, newly joining party \party's local clock should report a time in a sufficiently narrow interval with all other alert parties, at which point \party can claim also being alert.
+
+Based on the fine-grained classification of types of parties in our dynamic participation model (\cref{subsec:dynamic-participation}), newly joining parties can be classified into two types: (i) parties that are temporarily de-registered from \funcRO, and (ii) parties that start with bootstrapping from the genesis block, or parties that temporarily lose the network connection (i.e., de-registered from \funcDiffuse), or parties that are temporarily de-registered from \funcImpClock.
+
+For parties that are stalled for a while, since they do not miss any clock tick or other necessary information from the network, they can easily re-join by calling the procedure \textsf{SimulateClockAdjustments} (\cref{protocol:simulate-clock-adjustment}).
+%
+For the rest of newly joining parties, they will be classified as de-synchronized (note that parties are aware of their synchronization status), and will run the joining procedure \textsf{JoinProc}, which we now describe.
+
+\paragraph{Procedure \textsf{JoinProcedure}.}
+%
+In order to synchronize its clock, a newly joining party \party needs to ``listen'' to the protocol for sufficiently long time.
+%
+We describe the joining process below, which is similar to that in~\cite{EC:BGKRZ21}.
+%
+The main difference is that we adopt the heaviest-chain selection rule in order to adapt to the PoW context.
+%
+The complete specification of this protocol is presented in~\cref{protocol:join-procedure}, and the default parameters values are summarized in~\cref{table:join-proc-param}.
+
+\input{tables/join-params}
+
+\begin{cccItemize}[nosep]
+      \item \textbf{Phase A (state reset).}
+      %
+      When all resources are available to \party, after resetting all its local variables, \party invokes the main round procedure triggering the join procedure.
+
+      \item \textbf{Phase B (chain convergence, with parameter $t_{\mathsf{off}}$).}
+      %
+      In the second activation upon a \textsc{maintain-ledger} command, the party will jump to phase B and stay in phase B for $t_{\mathsf{off}}$ rounds.
+      %
+      During this phase, the party applies the \emph{heaviest-chain selection rule} \textsf{maxvalid} to filter its incoming chains.
+      %
+      The motivation behind Phase B is to let \party build a chain that shares a sufficiently long common prefix with all alert parties.
+      %
+      Note that since \party has not yet learnt the protocol time, it cannot filter out chains that should be put aside in the \futureChains.
+      %
+      Hence, the chain held by \party may still contain a long suffix built entirely by the adversary.
+      %
+      However, it can be guaranteed (\cref{lemma:goodskew-new-party}(a)) that this adversarial fork can happen for up to $k$ rounds ahead.
+      %
+      Thus, the beacons recorded before the fork can be used to compute the adjustment and their local arrival times will be reliable.
+
+      \item \textbf{Phase C (beacon gathering, with parameter $t_{\mathsf{gather}}$).}
+      %
+      Once a party \party has finished Phase B, it continues with Phase C, the beacon-gathering phase.
+      %
+      During this phase, \party continues to collect and filter chains as in Phase B.
+      %
+      In addition, \party now processes and bookkeeps the beacons received from $\funcDiffuse^{\mathsf{sync}}$.
+      %
+      At a high level, this phases' length parameter $t_{\mathsf{gather}}$ guarantees that: (i) enough beacons are recorded to compute a reliable time shift; and (ii) enough time has elapsed so that the blockchain reaches agreement on the set of (valid) beacons to use.
+      %
+      At the end of Phase C, \party is able to reliably judge valid arrival times.
+
+      \item \textbf{Phase D (shift computation, with parameter $t_{\mathsf{pre}}$).}
+      %
+      Since party \party has now built a blockchain sharing a common prefix with alert parties, and has bookkeeped synchronization beacons for a sufficiently long time, \party starts from the earliest interval $i^*$ such that (i) the arrival times of all beacons included in blocks within the beacon mining and inclusion phase of interval $i^*$ have been locally bookkeeped; and (2) all of these beacons arrived sufficiently later than the start of Phase C (parameterized by $t_{\mathsf{pre}}$ rounds).
+      %
+      Based on this information, \party computes the shift value as alert parties do at the boundary of synchronization interval $i^*$.
+      %
+      \party concludes Phase D when the adjusted time is a valid timestamp in interval $i^* + 1$ (in other words, \round does not exceed $(i^* + 1) \syncLen$); otherwise, \party updates the local arrival time of beacons with flag $\mathsf{temp}$ and repeats the above process with interval $i^* + 1$.
+      %
+      We note that if Phase D involves the computation w.r.t. multiple intervals, the local time may temporarily be set as an invalid timestamp.
+      %
+      Nevertheless, eventually after \party has passed $(2\CPLen + 5\syncLen / 2)$ (local) rounds, \party will end up with a valid timestamp that with overwhelming probability is close enough to those of all alert parties.
+\end{cccItemize}

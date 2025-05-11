@@ -1,0 +1,64 @@
+\subsection{Timekeeper Timestamps}
+\label{subsec:protocol-timestamps}
+
+As opposed to the conventional approach where blocks' timestamps are integer values, timestamps (both blocks' and beacon values) in \timekeeper are represented by a pair of values interval number and round number
+%
+\( \protocolTime{\interval}{\round} \in \protocolTime{\mathbb{N}^+}{\mathbb{N}^+}. \)
+%
+Note that (ideally) one synchronization interval would last for \syncLen rounds (i.e., rounds $((i - 1) \cdot \syncLen, i \cdot \syncLen]$ would belong to the $i$-th interval).
+%
+However, in \timekeeper we let the lower bound be $0$, which means that timestamps with a somewhat small round number are still valid.
+%
+Specifically, a timestamp $\protocolTime{\interval}{\round}$ is considered valid if and only if it satisfies the predicate
+%
+\( \mathsf{validTS}(\interval, \round) \triangleq \round \le \interval \cdot \syncLen. \)
+%
+We note that this new treatment allows for some small distortion at the end of each interval---i.e., the round number of a few blocks at the beginning of the next interval may be smaller than the last block of the previous interval (we call these ``retorted'' timestamps); see~\cref{fig:timestamp-retortion}.
+
+\input{figures/timestamp-scheme}
+
+Consider a chain of blocks in \timekeeper.
+%
+Their timestamps should increase monotonically in terms of their interval number, and the round number in a single interval should also increase monotonically.
+%
+More specifically, given two timestamps $\protocolTime{\interval_i}{\round_i}, \protocolTime{\interval_j}{\round_j}$ of two blocks $\block_i, \block_j$ respectively, if $\block_i$ is an ancestor block of $\block_j$, they should satisfy the following predicate:
+%
+\begin{equation*}
+    \mathsf{validTSOrder}(\protocolTime{\interval_i}{\round_i}, \protocolTime{\interval_j}{\round_j}) \triangleq
+    \left\{
+    \begin{aligned}
+        \mathsf{validTS}(\interval_i,              & \round_i) \wedge \mathsf{validTS}(\interval_i, \round_i)          \\
+        \wedge \big[ (\interval_i \le \interval_j) & \vee (\interval_i = \interval_j \wedge \round_i < \round_j) \big]
+    \end{aligned}
+    \right\}.
+\end{equation*}
+
+Furthermore, we will overload the notation of comparison operators based on the valid order of timestamps.
+%
+E.g., ``$=$'' will denote that two timestamps are identical, and $\protocolTime{\interval_1}{\round_1} < \protocolTime{\interval_2}{\round_2}$ if and only if $\mathsf{validTSOrder}(\protocolTime{\interval_1}{\round_1}, \protocolTime{\interval_2}{\round_2})$ holds.
+%
+Other operators $>, \le, \ge, \neq$ are defined similarly.
+
+We also redefine ``$+, -$'' to describe the timestamp that is $k \in \mathbb{N}$ rounds before (resp., after) \protocolTime{\interval}{\round}.
+%
+Regarding addition, $\protocolTime{\interval}{\round} + k = \protocolTime{\max \{ \interval, \lceil (\round + k) / \syncLen \rceil \}}{\round + k}$.
+%
+Intuitively, the additive operation simply adds $k$ to \round, and only increments \interval when it is going to become invalid.
+%
+For subtraction, $\protocolTime{\interval}{\round} - k = \protocolTime{\max \{ 1, \lceil (\round - k) / \syncLen \rceil \}}{\max \{ 1, \round - k \}}$.
+%
+In other words, regarding the subtraction operation, we only apply the operation on round, and the interval number is derived from the round after calculation.
+%
+It does not output timestamps that are not ``normally'' belong to an interval.
+%
+In case we do the subtraction operation for $k \ge \round$, it will return \protocolTime{1}{1}.
+
+\timekeeper's new approach to timestamps raises questions regarding the ``trimming'' of blockchains by counting the number of rounds.
+%
+Recall that in~\cite{EC:GarKiaLeo15} the notation $\chainPrefix{\chain}{k}$ represents the chain that results from removing the $k$ rightmost blocks.
+%
+In this paper, we overload this notation to denote the chain that results from removing blocks with timestamps in the last $k$ rounds with respect to the current time.
+%
+Specifically, for $\chain = \block_1 \block_2 \ldots \block_n$ and local time \protocolTime{\interval}{\round}, $\chainPrefix{\chain}{k} = \block_1 \block_2 \ldots \block_m$ is the longest chain such that $\forall \block \in \chainPrefix{\chain}{k}, \timestamp{\block} < \protocolTime{\interval}{\round} - k$.
+%
+In other words, $\block_{m + 1}$ is the first block (if it exists) such that $\timestamp{\block_{m + 1}} \ge \protocolTime{\interval}{\round} - k$ holds.
