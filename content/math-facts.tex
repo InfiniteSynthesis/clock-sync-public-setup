@@ -1,0 +1,39 @@
+\section{Mathematical Facts}
+\label{sec:math-facts}
+
+\cref{fact:fluctuation-fact} captures some facts (Especially, the relation between the total number of hash queries in $S$ and the number of queries in a specific round) within a $(\gamma, s)$-respecting environment.
+
+\begin{fact} \label{fact:fluctuation-fact}
+    Let $U$ be a set of at most $s$ consecutive rounds in a $(\gamma, s)$-respecting environment and $S \subseteq U$.
+    %
+    \begin{enumerate}[label=(\alph*), leftmargin=*, nosep]
+        \item For any $h \in \{ h_r : r \in U\}$, $\frac{h}{\gamma} < \frac{h(S)}{|S|} \le \gamma h$.
+        \item $h(U) \le (1 + \frac{\gamma |U \backslash S|}{|S|} h(S))$.
+        \item $|S| \sum_{r \in S} (p h_r)^2 \le \gamma (p h(S))^2$.
+    \end{enumerate}
+\end{fact}
+
+\begin{definition} \label{def:martingale-sequence}
+    \emph{\cite[Definition 5.3]{DubPan09}}
+    %
+    A sequence of random variables $(X_0, X_1, \ldots)$ is a martingale with respect to the sequence $(Y_0, Y_1, \ldots)$, if, for all $n \ge 0$, $X_n$
+    is determined by $Y_0, \ldots , Y_n$ and $\EX [X_{n+1} \mathbin| Y_0, \ldots , Y_n] = X_n$.
+\end{definition}
+
+\begin{theorem} \label{thm:martingale-bound}
+    Let $(X_0, X_1, \ldots)$ be a martingale with respect to the sequence $(Y_0, Y_1, \ldots)$.
+    %
+    Suppose an event $G$ implies
+    %
+    \[ \forall k \in \mathbb{N}^+, X_k - X_{k - 1} \le b ~~\text{and}~~ V = \sum_k \Var [X_k - X_{k - 1} \mathbin| Y_1, \ldots, Y_{k - 1}] \le v. \]
+    %
+    Then, for non-negative $n$ and $t$,
+    %
+    \[ \Pr [X_n \ge X_0 + t \wedge G] \le \exp \Big\{ - \frac{t^2}{2v + 2bt / 3} \Big\}. \]
+\end{theorem}
+
+\begin{fact} \label{fact:seq-med}
+    Let $(a_i)^n_{i = 1}$ and $(b_i)^n_{i = 1}$ be two sequences of $n$ integers each, with the property that $\forall i \in [n], |a_i - b_i| \le \varPhi$.
+    %
+    Then we have $| \med((a_i)^n_{i = 1}) - \med((a_i)^n_{i = 1})| \le \varPhi$.
+\end{fact}
