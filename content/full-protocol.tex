@@ -1,0 +1,156 @@
+\section{The \textsf{Timekeeper} Protocol}
+\label{sec:complete-protocol-description}
+
+In this section we give the full specification of the \textsf{Timekeeper} protocol.
+%
+The description is presented in UC-like notation.
+
+\paragraph{The main protocol instance.}
+%
+We first introduce the main \timekeeper protocol instance that dispatches to the relevant subprocesses.
+
+\input{protocols/main-instance}
+
+\paragraph{Registration and de-registration.}
+%
+In order to perform basic operations, a party \party needs to register to all resources.
+%
+Note that \party is aware whether he is not synchronized not and will set the bit variable \isSync correspondingly.
+
+\input{protocols/registration}
+
+The deregistration process is an analogous action.
+%
+Note that parties will record the last alert time which might be used to synchronize if it is only stalled.
+
+\input{protocols/deregistration}
+
+\paragraph{Ledger Maintenance}
+%
+We group all the steps in the main ledger operation in \textsf{LedgerMaintenance}.
+%
+Note that what a party might execute depends on its status.
+
+\input{protocols/ledger-maintenance}
+
+\paragraph{Chain verification.}
+%
+A core procedure is to distinguish valid from invalid chains.
+%
+The procedure is depicted below.
+%
+It adopts the verification rule of the main blockchain structure similar to that in Bitcoin (cf.~\cite{C:GarKiaLeo17,EPRINT:GarKiaLeo20}), and extends it with beacon verifications.
+
+Recall that \Isync{\interval} defined in~\cref{eq:isync-def} is a useful function which extracts the valid timestamp set in beacon mining and inclusion phase w.r.t. interval \interval.
+%
+In addition, \textsf{isvalidate} is a predicate that checks whether transactions in the blockchain achieves a valid ledger state (for details, see~\cite{C:BMTZ17}).
+
+\input{algorithms/is-valid-chain}
+
+\paragraph{The beacon validity predicate.}
+%
+Beacons validity is related to chain validity as one need the corresponding target as well as fresh randomness to check beacon validity.
+%
+The details can be found below.
+
+\input{algorithms/valid-sb}
+
+\paragraph{Fetch information.}
+%
+Parties fetch information from two diffusion network --- $\funcDiffuse^{\mathsf{bc}}$ and $\funcDiffuse^{\mathsf{tx}}$ --- to learn new chains and transactions.
+
+\input{protocols/fetch-information}
+
+\paragraph{Update mining target, fresh randomness and local time.}
+%
+Following~\cref{eq:next-target} and the rule regarding dampening filter $\tau$, the targets for each epoch \epoch are computed as following.
+%
+Recall that \textsf{EpochBlockCount} defined in~\cref{eq:epochblockcount} outputs the number of blocks in the corresponding epoch, and $T_0$ is a pre-determined target value (hardcoded in the protocol) that guarantees a ``safe'' start in our assumption.
+
+\input{protocols/update-mining-target}
+
+Parties will extract the fresh randomness in every synchronization interval from the block hash in previous epoch.
+%
+Note that $G(\cdot)$ is another hash function different from $H(\cdot)$ therefore it does not interact with the random oracle \funcRO in the mining procedure.
+
+\input{protocols/update-fresh-randomness}
+
+Parties will send \textsc{clock-tick} to \funcImpClock to check if it receives a $\mathrm{tick} = 0$, which indicates the beginning of a new (local) round.
+%
+Note that alert parties will never change the interval index \interval here when adding $1$ to \localTime (regarding the rules of addition, see~\cref{subsec:protocol-timestamps}); they will only adjust \interval in \textsf{SyncProcedure} (code in~\cref{protocol:sync-proc}).
+%
+Meanwhile, for those stalled parties, their local time will increase as if no adjustment happens.
+
+\input{protocols/update-time}
+
+\paragraph{Process beacons and arrival times.}
+%
+The following procedure processes incoming beacons, bookkeeps their arrival times and filters out invalid as well as duplicate beacons.
+%
+The predicate to verify beacons is presented in~\cref{algorithm:valid-sb}.
+%
+Regarding the duplicate beacons recording the same timestamp and miner identity, only one with the earliest arrival time will be preserved.
+
+\input{protocols/process-beacons}
+
+\paragraph{Chain selection.}
+%
+Parties drop invalid chains, and then select the a chain by \emph{heaviest difficulty} chain selection rule (cf.~\textsf{maxvalid} in~\cite{C:GarKiaLeo17}).
+%
+More specifically, $\max(\chain_1, \chain_2)$ will return the \emph{most difficult} of the two.
+%
+In case $\chainDiff{\chain_1} = \chainDiff{\chain_2}$, $\max(\cdot, \cdot)$  always return the first operand to reflect the fact that parties adopt the first chain they obtain from the network.
+
+\input{protocols/chain-selection}
+
+\paragraph{Mining Procedure}
+%
+Once a party \party has prepared all information and updated its state, it can run the core mining procedure formally given below.
+%
+When \localTime reports a timestamp that satisfies $\round \in \Isync{\interval}$ (i.e., \party stays in the beacon mining and inclusion phase), \party will include the fresh beacons and check if he succeeds in the beacon mining procedure.
+
+Note that, in the ``prepare block content'' part, we follow~\cite{C:BMTZ17} and adopt several predicates such as $\mathsf{blockify}_{\mathsf{OC}}$ and $\mathsf{validTX}_{\mathsf{OC}}$ to generate the Merkle root (\st) of the block content.
+%
+$\mathsf{blockify}_{\mathsf{OC}}$ is used to compute the root value, and $\mathsf{validTX}_{\mathsf{OC}}$ can justify whether an incoming transaction is valid w.r.t. the current blockchain state.
+%
+This part is not relevant to the topic of this paper; for further discussion, we refer to~\cite{C:BMTZ17}.
+
+\input{protocols/mining-procedure}
+
+\paragraph{Synchronization Procedure}
+%
+The synchronization procedure is called when party's local clock enters a clock synchronization interval boundary (i.e., $\localTime = \protocolTime{\interval}{\interval \cdot \syncLen}$).
+%
+Note that thanks to the timestamp scheme in \timekeeper, parties will only pass the interval boundary for once.
+
+\input{protocols/sync-procedure}
+
+\paragraph{Reading the Ledger State}
+%
+In order to read the ledger state, the party \party first processes all relevant information and then extracts the state (the settled ledger).
+
+\input{protocols/read-state}
+
+\paragraph{Simulate Clock Adjustments}
+%
+If parties are merely de-registered from the random oracle \funcRO (namely, stalled for a limited time), they can bootstrap easily to the reliable state and time.
+%
+Note that if parties are stalled, their \localTime is still updated in \textsf{UpdateTime} and by computing the distance of round numbers in $\mathtt{lastTimeAlert}$ and \localTime we get the exact number of rounds that have elapsed during the stall period.
+
+\input{protocols/simulate-clock-adjustment}
+
+\paragraph{Round finish procedure.}
+%
+Once a party \party has done its actions in a round, \party claims finishing current round by calling \textsf{FinishRound} and sending \textsc{clock-update} to \funcImpClock.
+%
+For details of the way to interact with \funcImpClock in a UC treatment, see~\cite{EC:BGKRZ21}.
+
+\input{protocols/finish-round}
+
+\paragraph{The Joining Procedure}
+%
+Another main procedure of \timekeeper is \textsf{JoinProc}, where newly joint parties synchronize with other alert parties by passively listening to the protocol execution, building blockchain and processing beacons to derive a local time that is close to all alert parties.
+%
+The default value of the parameters in each phase are summarized in~\cref{table:join-proc-param}.
+
+\input{protocols/joining-procedure}

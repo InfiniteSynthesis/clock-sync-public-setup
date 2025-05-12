@@ -1,0 +1,19 @@
+\begin{cccProtocol}
+    {$\mathsf{Deregistration\text{-}Timekeeper} (\party, \sid, \mathtt{reg}, \mathcal{G})$}
+    {deregistration}
+    {Parties de-register from corresponding resources in \timekeeper.}
+
+    \begin{algorithmic}[1]
+        \State{If the party is alert, set $\mathtt{lastTimeAlert} \gets\localTime$.}
+        \If{$\mathcal{G} = \funcImpClock$}
+        \State{Set $\isSync \gets \false$}
+        \State{Send $(\textsc{de-register}, \sid)$ to $\mathcal{G}$ and set registration status as de-registered with $\mathcal{G}$}
+        \State{Output the value received by $\mathcal{G}$}
+        \EndIf
+
+        \If{$\mathcal{G} = \funcLedger$}
+        \State{Set $\isSync \gets \false$}
+        \State{Send $(\textsc{de-register}, \sid)$ to \funcDiffuse, set its registration status as de-registered with \funcDiffuse and output $(\textsc{de-register}, \sid, \party)$.}
+        \EndIf
+    \end{algorithmic}
+\end{cccProtocol}

@@ -1,0 +1,11 @@
+\begin{cccProtocol}
+    {$\textsf{UpdateFreshRandomness}(\party, \sid)$}
+    {update-fresh-randomness}
+    {Updating mining target based on local chain}
+
+    \begin{algorithmic}[1]
+        \State{Set $\eta_\interval \gets G(\eta_{\interval - 1} \concat \interval \concat v)$ where $v$ is the concatenation of all block hash in interval $\interval - 1$, and $\eta_1 \triangleq \mathsf{CRS}$.}
+    \end{algorithmic}
+
+    \textsc{Output}: The protocol outputs $\eta_\epoch$ to its caller (but not to \Z).
+\end{cccProtocol}

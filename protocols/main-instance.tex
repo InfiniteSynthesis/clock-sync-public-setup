@@ -1,0 +1,69 @@
+\begin{cccProtocol}
+    {$\mathsf{Timekeeper}(\party, \sid; \funcLedger, \funcImpClock, \funcRO, \funcDiffuse)$}
+    {protocol-instance}
+    {The main protocol instance of \timekeeper}
+
+    \noindent\textbf{Global Variables:}
+    %
+    \begin{cccItemize}[nosep]
+        \item Read-only: \syncLen, \diffLen, $t_{\mathsf{off}}$, $t_{\mathsf{gather}}$, $t_{\mathsf{pre}}$
+
+        \item Read-write: \localTime, \epoch, \round, \chainLocal, $T^\epoch_\party$, $\mathtt{isInit}$, $t_{\mathsf{work}}$, \buffer, \futureChains, \isSync, $\mathtt{fetchCompleted}$, $\mathtt{lastTimeAlert}$, $\mathsf{arrivalTime}_{SB}(\cdot)$.
+    \end{cccItemize}
+
+    \paragraph{Registration / Deregistration:}
+    %
+    \begin{cccItemize}[nosep]
+        \item Upon receiving input $(\textsc{register}, \mathcal{R})$, where $\mathcal{R} \in \{ \funcLedger, \funcImpClock \}$ execute protocol $\textsf{Registration-Timekeeper}(\party, \sid, \mathtt{Reg}, \mathcal{R})$.
+
+        \item Upon receiving input $(\textsc{de-register}, \mathcal{R})$, where $\mathcal{R} \in \{ \funcLedger, \funcImpClock \}$ execute protocol $\textsf{Deregistration-Timekeeper}(\party, \sid, \mathtt{Reg}, \mathcal{R})$.
+
+        \item Upon receiving input $(\textsc{is-registered}, \sid)$ return $(\textsc{register}, \sid, 1)$ if the local registry \texttt{Reg} indicates that this party has successfully completed a registration with $\mathcal{R} = \funcLedger$ (and did not de-register since then).
+        %
+        Otherwise, return $(\textsc{register}, \sid, 0)$.
+    \end{cccItemize}
+
+    \paragraph{Interacting with the Ledger:}
+    %
+    Upon receiving a ledger-specific input $I \in \{(\textsc{submit}, \ldots),\allowbreak (\textsc{read}, \ldots),(\textsc{maintain-ledger}, \allowbreak \ldots)\}$ verify first that all resources are available.
+    %
+    \textbf{If} not all resources are available, \textbf{then} ignore the input; \textbf{else} (i.e., the party is operational and time-aware) execute one of the following steps depending on the input $I$:
+    %
+    \begin{cccItemize}[nosep]
+        \item \textbf{If} $I = (\textsc{submit}, \sid, \tx)$ \textbf{then} set $\buffer \gets \buffer \concat \tx$, and send $(\textsc{diffuse}, \sid, \tx)$ to \funcDiffuse.
+
+        \item \textbf{If} $I = (\textsc{maintain-ledger}, \sid, \mathrm{minerID})$ \textbf{then} invoke protocol $\mathsf{LedgerMaintenance} (\party, \sid)$; \textbf{if} \textsf{LedgerMaintenance} halts \textbf{then} halt the protocol execution (all future input is ignored).
+
+        \item \textbf{If} $I = (\textsc{read}, \sid)$ \textbf{then} invoke protocol $\textsf{ReadState}(\party, \sid)$.
+
+        \item \textbf{If} $I = (\textsc{export-time}, \sid)$ \textbf{then} do the following:
+        %
+        If \isSync or $\mathtt{isInit}$ is \false, then return $(\textsc{export-time}, \sid, \bot)$ to the caller.
+        %
+        Otherwise, call $\textsf{UpdateTime}(\party, R)$ and return $(\textsc{export-time}, \sid, \localTime)$ to the caller.
+    \end{cccItemize}
+
+    \paragraph{Handling calls to the shared setup:}
+    %
+    \begin{cccItemize}[nosep]
+        \item Upon receiving $(\textsc{clock-tick}, \sid_C)$, forward it to \funcImpClock and output \funcImpClock's response.
+
+        \item Upon receiving $(\textsc{clock-update}, \sid_C)$, record that a clock-update was received in the current round.
+        %
+        If the party is registered to all its setups, then do nothing further.
+        %
+        Otherwise, do the following operations \textit{before concluding this round}:
+        %
+        \begin{cccEnum}[nosep]
+            \item If this instance is currently time-aware but otherwise stalled or offline, then call $\textsf{UpdateTime}(\party, R)$ to update \localTime.
+            %
+            If the party has passed a synchronization interval, then set $\isSync \gets \false$.
+
+            \item If this instance is only stalled but $\isSync = \true$, then additionally execute $\textsf{FetchInformation}(\party, \sid)$, extract all new synchronization beacons from the fetched chains and record their arrival times and set $\mathtt{fetchCompleted} \gets \true$.
+            %
+            Also, any unfinished interruptible execution of this round is marked as completed.
+
+            \item Forward $(\textsc{clock-update}, \sid_C)$ to \funcImpClock to finally conclude the round.
+        \end{cccEnum}
+    \end{cccItemize}
+\end{cccProtocol}

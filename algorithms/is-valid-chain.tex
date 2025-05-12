@@ -1,0 +1,59 @@
+\begin{cccAlgorithm}
+    {$\textsf{IsValidChain}(\chain)$}
+    {is-valid-chain}
+    {The chain validation procedure.}
+
+    \begin{algorithmic}[1]
+        \oneLineIf{\chain contains empty intervals or starts with a block with hash reference other than $\mathsf{CRS}$, or $\mathsf{isvalidstate}(\overrightarrow{\st}) = 0$}{\Return \false}
+
+        \oneLineIf{\isSync and $(\exists \block \in \chain : \timestamp{\block} > \localTime)$}{\Return \false}
+
+        \For{each interval $\interval'$}
+
+        \State{$\epoch' \gets \mathsf{TargetRecalcEpoch}(\protocolTime{\interval'}{\cdot})$}
+
+        \LineComment{Derive target and randomness for interval $\interval'$}
+
+        \State{Set $T_{\epoch'}^\chain$ to be the target for epoch $\epoch'$ in \chain.}
+
+        \State{Set $\eta_{\interval'} \gets G(\eta_{\interval' - 1} \concat \interval' \concat v)$ where $v$ is the concatenation of all block hash in interval $\interval' - 1$, and $\eta_1 \triangleq \mathsf{CRS}$.}
+
+        \For{each block \block in \chain from interval $\interval'$} \Comment{check 2-for-1 PoW}
+        \State{Parse \block as $\langle ctr, h, \st, \protocolTime{\interval'}{\round'}, txLabel \rangle$.}
+
+        \LineComment{Check hash}
+        \State{Set $\mathsf{badhash} \gets (h \neq H(\block^{-1}))$, where $\block^{-1}$ is the last block in \chain before \block.}
+
+        \LineComment{Check nonce}
+        \State{Set $\mathsf{badnonce} \gets ( H(ctr, h, \st, \protocolTime{\interval'}{\round'}, txLabel) < T_{\epoch'}^\chain) \wedge (ctr < 2^{32})$}
+
+        \LineComment{Check beacons}
+        \If{$\exists \beacon \in \block$ and $\timestamp{\beacon} \notin \Isync{\interval'}$}
+
+        \State{Set $\mathsf{badBeacon} \gets \true$}
+
+        \ElsIf{$\exists \beacon \in \block : \timestamp{\beacon} > \timestamp{\block}$}
+
+        \State{Set $\mathsf{badBeacon} \gets \true$}
+
+        \Else
+        \State{Parse \beacon as $\langle \protocolTime{\interval'}{\round'}, \party', \eta_\beacon, ctr, blockLabel \rangle$}
+
+        \oneLineIf{\chain contains more than one beacon with $(\round', \party', \cdot)$}{set $\mathsf{badBeacon} \gets \true$}
+
+        \oneLineIf{$\eta_\beacon \neq \eta_{\interval'}$ \textbf{or} $\round' \notin \Isync{\interval'}$}{set $\mathsf{badBeacon} \gets \true$}
+
+        \State{$u \gets H(ctr, \round', blockLabel, \protocolTime{\interval'}{\round'}, \party', \eta_{\interval'})$}
+
+        \State{Set $\mathsf{badBeacon} \gets ( \stringRev{u} < T_{\epoch'}^\chain ) \wedge (ctr' < 2^{32})$}
+
+        \EndIf
+
+        \oneLineIf{$\sf (badhash \vee badnonce \vee badBeacon)$}{\Return \false}
+
+        \EndFor
+        \EndFor
+        
+        \State{\Return \true}
+    \end{algorithmic}
+\end{cccAlgorithm}

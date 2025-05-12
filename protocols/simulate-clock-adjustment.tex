@@ -1,0 +1,30 @@
+\begin{cccProtocol}
+    {$\mathsf{SimulateClockAdjustment}(\party, \sid)$}
+    {simulate-clock-adjustment}
+    {Stalled parties simulate clock adjustments.}
+
+    \newcommand{\simulatedTime}{\ensuremath{\mathsf{simulatedTime}}\xspace}
+    \begin{algorithmic}[1]
+        \State{$\simulatedTime \gets \mathtt{lastTimeAlert}$}
+
+        \State{Set $\round'$ as round index in \simulatedTime}
+
+        \For{$\round - \round'$ iterations}
+        \State{Let $\mathcal{N}_0$ be the subsequence of \futureChains s.t. $\chain \in \mathcal{N}_0 : \Leftrightarrow \forall \block \in \chain : \timestamp{\block} \le \simulatedTime$}
+
+        \State{Remove each $\chain \in \mathcal{N}_0 $ from \futureChains.}
+
+        \State{Emulate $\mathsf{SelectChain}(\party, \sid, \chainLocal, \mathcal{N}_0, \syncLen)$ with simulated time \simulatedTime (instead of \localTime) to update \chainLocal}
+
+        \If{$\simulatedTime = \protocolTime{\interval}{\interval \cdot \syncLen}$ for interval \interval}
+        \State{Emulate $\mathsf{SyncProcedure}(\party, \sid, \syncLen)$ on simulated time \simulatedTime (instead of \localTime)}
+        \EndIf
+        \EndFor
+
+        \State{Set $\localTime \gets \simulatedTime$}
+
+        \State{Set $t_{\mathsf{work}} \gets \localTime - 1$}
+    \end{algorithmic}
+
+    \textsc{Output}: The protocol outputs \textsf{ok} to its caller (but not to \Z).
+\end{cccProtocol}

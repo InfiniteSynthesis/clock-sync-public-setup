@@ -1,0 +1,59 @@
+\begin{cccProtocol}
+    {$\mathsf{SyncProcedure}(\party, \sid)$}
+    {sync-proc}
+    {Parties update their local clocks.}
+
+    \begin{algorithmic}[1]
+        \LineComment{Only called when: \party is alert, $\localTime = \protocolTime{\interval}{\interval \cdot \syncLen}$ and $\interval > 0$}
+
+        \State{$B \gets \{ \block \mathbin| (\block \in \chainLocal)  \wedge (\timestamp{\block} = \protocolTime{\interval}{\cdot}) \wedge (\Isync{\timestamp{\block}} = \true) \}$}
+
+        \State{$SB \gets \{\beacon \mathbin| (\beacon \in \block \in B) \wedge (\timestamp{\beacon} = \protocolTime{\interval}{\cdot}) \wedge (\Isync{\timestamp{\beacon}} = \true) \}$}
+
+        \LineComment{Find representative beacon and compute recommendation.}
+
+        \For{each $\beacon =  \langle \protocolTime{\interval'}{\round'}, \party', ctr, \eta_\beacon, blockLabel \rangle \in SB$}
+
+        \State{Find unique $\beacon' = \langle \protocolTime{\interval'}{\round'}, \party', \cdot, \cdot, \cdot \rangle \in \syncBuffer$. If inexistent, set $\beacon' \gets \bot$.}
+
+        \If{$\beacon' \neq \bot$}
+        \State{Set $\mathsf{arrivalTime}_{SB}(\beacon) \gets \mathsf{arrivalTime}_{SB}(\beacon')$}
+
+        \State{$\textsf{recom}(\beacon) \gets \timestamp{\beacon} - \mathsf{arrivalTime}(\beacon)$}
+        \Else
+        \State{$\mathcal{S} \gets \mathcal{S} \mathbin \backslash \{ \beacon \}$}
+        \Comment{Negligible probability event in execution.}
+        \EndIf
+        \EndFor
+
+        \State{$\shift_i \gets \med \{ \textsf{recom}(\beacon) \mathbin{|} \beacon \in SB \}$}
+
+        \For{each \beacon with $\mathsf{arrivalTime}_{SB}(\beacon) = (a, \mathsf{temp})$}
+        \State{$\mathsf{arrivalTime}_{SB}(\beacon) \gets (a + \shift_i, \mathsf{final})$}
+        \EndFor
+
+        \oneLineIf{$\shift_i = 0$}{$\interval \gets \interval + 1$}
+        \Comment{No adjustment, simply enter next epoch}
+
+        \If{$\shift_i > 0$} \Comment{Move fast forward}
+        \State{$\textsf{newTime} \gets \protocolTime{\interval + 1}{\round + \shift_i}, \localTime \gets \protocolTime{\interval + 1}{\round}, \mathcal{M}_{\mathrm{chains}} \gets \emptyset$}
+
+        \While{$\localTime < \textsf{newTime}$}
+        \State{$\localTime \gets \localTime + 1$} \Comment{increment round counter in localtime by 1}
+
+        \State{Let $\mathcal{N}_0$ be the subsequence of \futureChains s.t. $\chain \in N_0 : \Leftrightarrow \forall \block \in \chain : \timestamp{\block} < \localTime$}
+
+        \State{Remove each $\chain \in \mathcal{N}_0$ from \futureChains}
+
+        \State{Call $\textsf{SelectChain}(\party, \sid, \chainLocal, \mathcal{N}_0, \syncLen)$ to update \chainLocal}
+        \EndWhile
+
+        \State{Send $(\textsc{diffuse}, \sid, \mathcal{M}_{\mathrm{chains}})$ to $\funcDiffuse^{\mathsf{bc}}$ and proceed from here upon next activation of this procedure.}
+        \EndIf
+
+        \oneLineIf{$\shift_i < 0$}{Set $\localTime \gets (\interval + 1, \round + \shift_i)$}
+        \Comment{Set clock back}
+    \end{algorithmic}
+
+    \textsc{Output}: The protocol outputs \textsf{ok} to its caller (but not to \Z).
+\end{cccProtocol}

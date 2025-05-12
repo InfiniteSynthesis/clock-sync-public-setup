@@ -1,0 +1,17 @@
+\begin{cccProtocol}
+    {$\textsf{SelectChain}(\party, \sid, \mathcal{N} = \{ \chain_1, \ldots , \chain_n \})$}
+    {select-chain}
+    {Parties filter invalid chains and apply the heaviest chain selection rule.}
+
+    \begin{algorithmic}[1]
+        \State{Set $\chain_{\max} \gets \chainLocal$}
+
+        \For{$i = 1$ \textbf{to} $n$}
+        \oneLineIf{$\textsf{IsValidChain}(\chain_i)$ returns \true}{$\chain_{\max} \gets \max(\chain_{\max}, \chain_i)$}
+        \EndFor
+
+        \State{Replace \chainLocal by $\chain_{\max}$.}
+    \end{algorithmic}
+
+    \textsc{Output}: The protocol outputs $\chain_{\max}$ to its caller (but not to \Z).
+\end{cccProtocol}

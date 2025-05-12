@@ -1,0 +1,33 @@
+\begin{cccProtocol}
+    {$\mathsf{ReadState}(\party, \sid)$}
+    {read-state}
+    {Parties read the ledger state.}
+
+    \begin{algorithmic}[1]
+        \If{$\mathtt{isInit} = \false \vee \isSync = \false$}
+        \State{Output the empty state $(\textsc{read}, \sid, \varepsilon)$ (to Z).}
+        \Else
+        \State{Call $\textsf{FetchInformation}(\party, \sid)$ and denote the output by $(\chain_1, \ldots , \chain_N), (\tx_1, \ldots, \tx_k)$}
+
+        \State{Set $\buffer \gets \buffer \mathbin \Vert (\tx_1, \ldots, \tx_k)$ and define $\mathcal{N} \gets \{ \chain_1, \ldots , \chain_N \}$}
+
+        \State{Call $\textsf{UpdateTime}(\party, \syncLen)$}
+
+        \State{Call $\textsf{ProcessBeacons}(\party, \sid)$}
+
+        \State{Let $\mathcal{N}_0 := \{ \chain \in \mathcal{N} \cup \futureChains \mathbin| \forall \block \in \chain : \timestamp{\block} \le \localTime \}$}
+
+        \State{Let $\mathcal{N}_1 := \{ \chain \in \mathcal{N} \mathbin| \exists \block \in \chain : \timestamp{\block} > \localTime \}$}
+
+        \State{$\futureChains \gets (\futureChains \mathbin \backslash \mathcal{N}_0) \cup \mathcal{N}_1 $}
+
+        \State{$\mathtt{fetchCompleted} \gets \true$}
+
+        \State{Call $\textsf{SelectChain}(\party, \sid, \chainLocal, \mathcal{N}_0, \syncLen)$ to update \chainLocal}
+
+        \State{Extract the state \st from the current local chain \chainLocal}
+
+        \State{Output $(\textsc{read}, \sid, \st^{\lceil k})$ (to \Z)} \Comment{$\st^{\lceil k}$ denotes the prefix of \st by pruning blocks with timestamps reporting the last $k$ rounds}
+        \EndIf
+    \end{algorithmic}
+\end{cccProtocol}

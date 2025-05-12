@@ -1,0 +1,25 @@
+\begin{cccProtocol}
+    {$\mathsf{UpdateMiningTarget}(\party, \sid)$}
+    {update-mining-target}
+    {Updating mining target based on local time and chain.}
+
+    \begin{algorithmic}[1]
+        \State{$\epoch \gets \mathsf{TargetRecalcEpoch}(\localTime)$}
+
+        \If{$\epoch = 1$}
+        
+        \State{$T_\epoch \gets T_0$}
+        
+        \Else
+        
+        \State{$\varLambda = | \mathsf{EpochBlocks}(\chainLocal, \epoch - 1) |$}
+        
+        \State{$\varLambda = \min \{ \max\{\varLambda, \varLambda_{\mathsf{epoch}} / \tau \}, \varLambda_{\mathsf{epoch}} \cdot \tau \}$}
+        
+        \State{$T_\epoch \gets (\varLambda_{\mathsf{epoch}} / \varLambda) \cdot T_{\epoch - \diffLen / \syncLen}$}
+        
+        \EndIf
+    \end{algorithmic}
+
+    \textsc{Output}: The protocol outputs $T_\epoch$ to its caller (but not to \Z).
+\end{cccProtocol}

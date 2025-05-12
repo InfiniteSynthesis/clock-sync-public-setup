@@ -1,0 +1,51 @@
+\begin{cccProtocol}
+    {$\mathsf{ProcessBeacons}(\party, \sid, B)$}
+    {process-beacons}
+    {Parties filter invalid synchronization beacons.}
+
+    \begin{algorithmic}[1]
+        \oneLineIf{$\mathtt{fetchCompleted}$}{\Return}
+        \State{Send $(\textsc{fetch}, \sid)$ to $\funcDiffuse^{\mathsf{sync}}$. denote the response from $\funcDiffuse^{\mathsf{sync}}$ by $(\textsc{fetch}, \sid, b)$}
+
+        \State{Extract all received beacons $(\beacon_1, \ldots , \beacon_k)$ contained in $b \cup B$.}
+
+        \For{each $\beacon_i$ with $\mathsf{arrivalTime}_{SB}(\beacon_i) = \bot$}
+        \State{$\syncBuffer \gets \syncBuffer \cup \{ \beacon_i \}$}
+
+        \State{Let $\interval'$ be the interval index $\timestamp{\beacon_i}$ belongs to}
+
+        \If{$\isSync \wedge (\interval \ge \interval')$}
+
+        \State{Set $\mathsf{arrivalTime}_{SB}(\beacon_i) \gets (\localTime, \mathsf{final})$}
+        \Comment{The measurement is final.}
+
+        \Else \Comment{Will be adjusted upon next time shift.}
+        \State{$\mathsf{arrivalTime}_{SB}(\beacon_i) \gets (\localTime, \mathsf{temp})$}
+
+        \EndIf
+        \EndFor
+
+        \LineComment{Buffer cleaning. Keep one representative arrival time.}
+
+        \If{\isSync}
+        \State{Remove from \syncBuffer all beacons s.t. $\textsf{ValidSB}(\party, \sid, \beacon, \chainLocal, \syncLen)$ returns \false}
+
+        \State{$\syncBuffer_{\mathrm{valid}} \gets \{\beacon' \in \syncBuffer \mathbin{|} \textsf{ValidSB}(\party, \sid, \beacon', \chainLocal, \syncLen) = \true \}$}
+
+        \State{Let $L = (\beacon_1, \ldots , \beacon_n)$ be a canonical ordering of $\syncBuffer_{\mathrm{valid}}$}
+
+        \For{each $\beacon = \langle \protocolTime{\interval'}{\round'}, \party', \eta_\beacon, ctr, blockLabel \rangle \in L$}
+        \State{$Q_\beacon \gets \{ \beacon' = \langle \protocolTime{\interval''}{\round''}, \party'', \cdot, \cdot, \cdot \rangle \in L \mathbin| \party' = \party'' \wedge  \protocolTime{\interval'}{\round'} =  \protocolTime{\interval''}{\round''} \}$}
+
+        \State{$\min_\beacon \gets \min \{ \mathsf{arrivalTime}(\beacon') \mathbin| \beacon' \in Q_\beacon \}$}
+
+        \State{$\beacon' \gets \min \{\beacon'' \in Q_\beacon \mathbin| \mathsf{arrivalTime}(\beacon'') = \min_\beacon \}$}
+        \Comment{Min w.r.t. ordering in $L$}
+
+        \State{Remove from \syncBuffer all beacons $\langle \protocolTime{\interval'}{\round'}, \party', \cdot, \cdot, \cdot \rangle$ except $\beacon'$}
+        \EndFor
+        \EndIf
+    \end{algorithmic}
+
+    \textsc{Output}: \textsf{ok} to its caller (but not to \Z).
+\end{cccProtocol}

@@ -1,0 +1,69 @@
+\begin{cccProtocol}
+    {$\textsf{MiningProcedure}(\party, \sid)$}
+    {mining-procedure}
+    {The mining procedure of \timekeeper.}
+
+    \begin{algorithmic}[1]
+        \LineComment{The following steps are executed in an (\textsc{maintain-ledger}, \sid, minerID)-interruptible manner:}
+
+        \oneLineIf{$h \neq H(\textsf{head}(\chainLocal))$}{$h \gets H(\textsf{head}(\chainLocal))$}
+        \Comment{Check if switch to a new chain.}
+
+        \LineComment{Prepare block content.}
+
+        \State{Set $\buffer' \gets \buffer, \mathbf{N} \gets \tx^{\mathrm{base-tx}}_\party$ , and $\st \gets \textsf{blockify}_{\textsf{OC}}(\mathbf{N})$.}
+
+        \Repeat
+        \State{Parse $\buffer'$ as sequence $(\tx_1, \ldots, \tx_n)$}
+
+        \For{$i = 1$ to $n$}
+        \If{$\textsf{validTX}_{\textsf{OC}}(\tx_i, \overrightarrow{\st} \concat \st) = 1$}
+        \State{$\textbf{N} \gets \textbf{N} \concat \tx_i$}
+
+        \State{Remove $\tx'$ from $\buffer'$}
+
+        \State{Set $\st \gets \textsf{blockify}_{\textsf{OC}}(\textbf{N})$}
+        \EndIf
+        \EndFor
+        \Until{\textbf{N} does not increase any more}
+
+        \LineComment{Check if a beacon should be included.}
+
+        \If{$\Isync{\localTime} = \true$}
+        \State{$B \gets \{\beacon' \in \syncBuffer \mathbin| \textsf{ValidSB}(\party, \sid, \beacon', \chainLocal, \syncLen) = \true \}$}
+
+        \State{Remove from $B$ all beacons $\beacon = \langle \protocolTime{\interval'}{\round'}, \party', \cdot, \cdot, \cdot \rangle$ that satisfy $(\timestamp{\beacon} > \localTime) \vee (\Isync{\timestamp{\beacon}} = \true) \vee \chainLocal$ contains a beacon $\langle \protocolTime{\interval'}{\round'}, \party', \cdot, \cdot, \cdot \rangle$.}
+
+        \State{$\textbf{N} \gets \textbf{N} \concat B$}
+
+        \State{Set $\st \gets \textsf{blockify}_{\textsf{OC}}(\textbf{N})$}
+        \EndIf
+
+        \LineComment{prepare 2-for-1 PoW.}
+
+        \State{$blockLabel \gets  h \concat \st, txLabel \gets \party \concat \eta_\interval $}
+
+        \State{$u \gets H(ctr, h, \st, \localTime, \party, \eta_\interval)$}
+
+        \LineComment{Check if block mining succeed.}
+
+        \If{$(u < T^\chain_\epoch) \wedge (ctr < 2^{32})$}
+        \State{Set $\block \gets \langle h, \st, \localTime, ctr, txLabel \rangle$ and update $\chainLocal \gets \chainLocal \concat \block$}
+
+        \State{Send $(\textsc{diffuse}, \sid, \chainLocal)$ to $\funcDiffuse^{\mathsf{bc}}$}
+        
+        \State{Set anchor and proceed from here upon next activation of this procedure.}
+        \EndIf
+
+        \LineComment{Check if a PoW timestamp transaction mining succeed.}
+
+        \If{$(\stringRev{u} < T^\chain_\epoch) \wedge (ctr < 2^{32}) \wedge (\Isync{\localTime} = \true)$}
+        \State{$\beacon \gets \langle \localTime, \party, ctr, \eta_\interval, blockLabel \rangle$}
+
+        \State{Send (\textsc{diffuse}, \sid, \beacon) to $\funcDiffuse^{\mathsf{sync}}$}
+        \State{Set anchor at the end of the procedure to resume on next maintenance activation.}
+        \EndIf
+
+        \State{$ctr \gets ctr + 1$}
+    \end{algorithmic}
+\end{cccProtocol}

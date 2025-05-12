@@ -1,0 +1,29 @@
+\begin{cccProtocol}{
+    $\mathsf{FetchInformation}(\party, \sid)$}
+    {fetch-information}
+    {Fetching new blocks and transactions from $\funcDiffuse^{\mathsf{bc}}$ and $\funcDiffuse^{\mathsf{tx}}$.}
+    
+    \begin{algorithmic}[1]
+        \oneLineIf{$\mathtt{fetchCompleted}$}{\Return}
+
+        \LineComment{Fetch on $\funcDiffuse^{\mathsf{bc}}$}
+
+        \State{Send $(\textsc{fetch}, \sid)$ to $\funcDiffuse^{\mathsf{bc}}$; denote the response from $\funcDiffuse^{\mathsf{bc}}$ by $(\textsc{fetch}, \sid, b)$.}
+
+        \State{Extract chains $\chain_1, \ldots , \chain_k$ from $b$.}
+
+        \LineComment{Fetch on $\funcDiffuse^{\mathsf{tx}}$}
+
+        \State{Send $(\textsc{fetch}, \sid)$ to $\funcDiffuse^{\mathsf{tx}}$; denote the response from $\funcDiffuse^{\mathsf{tx}}$ by $(\textsc{fetch}, \sid, b)$.}
+
+        \State{Extract received transactions $\tx_1, \ldots , \tx_k$ from $b$.}
+
+        \If{\textbf{not} \isSync or \party is stalled}
+        \State{$\buffer \gets \buffer \concat (\tx_1, \ldots, \tx_n)$}
+
+        \State{$\futureChains \gets \futureChains \cup \{ \chain_1, \ldots, \chain_n \}$}
+        \EndIf
+    \end{algorithmic}
+
+    \textsc{Output}: The protocol outputs $(\chain_1, \ldots , \chain_k)$ and $(\tx_1, \ldots , \tx_k)$ to its caller (but not to \Z).
+\end{cccProtocol}

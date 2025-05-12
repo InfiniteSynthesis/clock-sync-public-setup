@@ -1,0 +1,54 @@
+\begin{cccProtocol}
+    {$\mathsf{LedgerMaintenance} (\party, \sid)$}
+    {ledger-maintenance}
+    {The main operations for parties to maintain the ledger.}
+
+    \begin{algorithmic}[1]
+        \LineComment{The following steps are executed in an $(\textsc{maintain-ledger}, \sid, \text{minerID})$-interruptible manner:}
+
+        \oneLineIf{$\mathtt{isInit} = \false$}{Send $(\textsc{Retrieve}, \sid)$ to \funcCRS and receive $(\textsc{Retrieved}, \mathsf{CRS})$.}
+
+        \If{\isSync and stalled before (and now up and running)}
+        \State{Call $\mathsf{SimulateClockAdjustments}(\party, \sid)$}
+        \EndIf
+
+        \oneLineIf{\textbf{not} \isSync}{Call $\textsf{JoinProc}(\textsf{P}, \sid)$}
+
+        \LineComment{Normal operation when alert}
+
+        \State{Call $\textsf{FetchInformation}(\party, \sid)$ and denote the output by $(\chain_1, \ldots , \chain_N), (\tx_1, \ldots, \tx_k)$}
+
+        \State{Set $\buffer \gets \buffer \concat (\tx_1, \ldots , \tx_k)$ and define $\futureChains \gets \futureChains \concat (\chain_1, \ldots , \chain_N)$}
+        \State{Call $\textsf{UpdateTime}(\party, \sid)$}
+
+        \LineComment{Ensures the processing of new beacons arrived in chains only.}
+
+        \State{Extract beacons $B \gets \{\beacon_1, \ldots , \beacon_n\}$ contained in $\chain_1, \ldots , \chain_N$ and not yet contained in \syncBuffer.}
+
+        \State{Call $\mathsf{ProcessBeacons}(\party, \sid, B)$}
+
+        \State{Let $\mathcal{N}_0$ be the subsequence of \futureChains s.t. $\chain \in \mathcal{N}_0 :\Leftrightarrow \forall \block \in \chain : \timestamp{\block} \le \localTime$}
+
+        \State{Remove each $\chain \in \mathcal{N}_0$ from \futureChains.}
+
+        \State{$\mathtt{fetchCompleted} \gets \true$}
+
+        \State{Call $\mathsf{SelectChain}(\party, \sid, \chainLocal, \mathcal{N}_0, \syncLen)$ to update \chainLocal}
+
+        \If{$t_{\mathsf{work}} < \localTime$}
+
+        \State{Call $\mathsf{UpdateMiningTarget}(\party, \diffLen)$ to update $T^\chain_\epoch$}
+
+        \State{Call $\textsf{UpdateFreshRandomness}(\party, \syncLen)$ to update $\eta_\interval$}
+
+        \State{Call $\mathsf{MiningProcedure}(\party, \epoch, \round, \buffer, \chainLocal)$}
+
+        \State{Set $t_{\mathsf{work}} \gets \localTime$}
+
+        \oneLineIf{$\round = \interval \cdot \syncLen$}{Call $\mathsf{SyncProcedure}(\party, \sid, R)$}
+        
+        \EndIf
+
+        \State{Call $\textsf{FinishRound}(\party)$ \Comment{Mark normal round actions as finished.}}
+    \end{algorithmic}
+\end{cccProtocol}

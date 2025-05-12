@@ -1,0 +1,14 @@
+\begin{cccProtocol}
+    {$\mathsf{FinishRound}(\party, \sid)$}
+    {finish-round}
+    {Finishing a round.}
+
+    \begin{algorithmic}[1]
+        \While{A $(\textsc{clock-update}, \Z)$ has not been received during the current round }
+        \State{Give up activation (set the anchor here)}
+        \EndWhile
+
+        \State{Send $(\textsc{clock-update}, \sid_C)$ to \funcImpClock.}
+        \Comment{Party will lose its activation here.}
+    \end{algorithmic}
+\end{cccProtocol}

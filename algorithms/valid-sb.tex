@@ -1,0 +1,32 @@
+\begin{cccAlgorithm}
+    {$\textsf{ValidSB}(\beacon, \chain)$}
+    {valid-sb}
+    {The beacon validation procedure.}
+
+    \begin{algorithmic}[1]
+        \LineComment{Precondition: Chain \chain is valid. Returns \true if the beacon is a valid beacon w.r.t. \chain, $\mathsf{undecided}$ if no judgement is possible, and \false if the beacon is invalid w.r.t. \chain.}
+
+        \State{Parse \beacon as $\langle \protocolTime{\interval'}{\round'}, \party', \eta_\beacon, ctr, blockLabel \rangle$}
+
+        \If{\chain contains no block in interval $\interval'$}
+        \State{\Return $\mathsf{undecided}$}
+        \Comment{no judgement possible for this beacon}
+        \EndIf
+
+        \LineComment{Derive target and randomness for interval $\interval'$ as indicated by \chain}
+
+        \State{$\epoch' \gets \mathsf{TargetRecalcEpoch}(\protocolTime{\interval'}{\round'})$}
+
+        \State{Set $T_{\epoch'}^\chain$ to be the target for epoch $\epoch'$ in \chain.}
+
+        \State{Set $\eta_{\interval'} \gets G(\eta_{\interval' - 1} \concat \interval' \concat v)$ where $v$ is the concatenation of all block hash in interval $\interval' - 1$, and $\eta_1 \triangleq \mathsf{CRS}$.}
+
+        \LineComment{Check nonce value and freshness}
+
+        \State{$u \gets H(ctr, \round', blockLabel, \protocolTime{\interval'}{\round'}, \party', \eta_{\interval'})$}
+
+        \oneLineIf{$( \stringRev{u} < T_\epoch^\chain) \wedge (ctr' < 2^{32}) \wedge (\eta_{\interval'} = \eta_\beacon)$}{\Return \true}
+
+        \State{\Return \false}
+    \end{algorithmic}
+\end{cccAlgorithm}
