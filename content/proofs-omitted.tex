@@ -1,0 +1,120 @@
+\section{Proofs Omitted from the Main Body}
+\label{sec:proofs-omitted}
+
+\begin{proof}[Proof of~\cref{lemma:chain-growth}]
+    If two blocks are obtained at nominal rounds which are at distance at least $\delay + \maxskew$, then we are certain that the later block increased the accumulated difficulty.
+    %
+    To be precise, assume $S^* \subseteq S$ is such that, for all $i, j \in S^*$, $|i - j| \ge \delay + \maxskew$ and $Y_i > 0$.
+    %
+    We argue that, by round $v$, every honest party has a chain of difficulty at least
+    %
+    \[ d + \sum_{r \in S^*} Y_r \ge d + Q(S). \]
+    %
+    Observe first that every honest party will receive the chain of difficulty $d$ by round $u + \delay + \maxskew$ and so the first block obtained in $S^*$ extends a chain of weight at least $d$.
+    %
+    Next, note that if a block obtained in $S^*$ is the head of a chain of weight at least $d'$, then the next block in $S^*$ extends a chain of weight at least $d'$.
+\end{proof}
+
+\begin{proof}[Proof of~\cref{lemma:typical-execution-result}]
+    For the proof of~\cref{lemma:typical-execution-result}(a)(b)(c), we refer to~\cite{EPRINT:GarKiaLeo20}.
+    %
+    Regarding \cref{lemma:typical-execution-result}(d), note that we are under the same condition as that in~\cref{lemma:typical-execution-result}(c), we have
+    %
+    \[ A(J') < A(J) < (1 - \delta + 3\epsilon) Q(S) \le (1 - \delta + 3\epsilon) (1 + \epsilon) p h(S) < (1 - \delta + 3\epsilon) (1 + \epsilon) (1 - \delta) p |J'| < (1 + \epsilon) p |J'|. \]
+    %
+    The second inequality follows~\cref{lemma:typical-execution-result}(c); the third one comes from~\cref{def:typical-execution}(a); the last inequality is a consequence of Condition~\eqref{condition:absorb-error}.
+
+    By combining the upper bound on $A(J')$ with $D(S) < (1 + \epsilon) p h(S)$ (which comes from the definitions) we get the desired inequality.
+\end{proof}
+
+\begin{proof}[Proof of~\cref{thm:typical-execution-error-prob}]
+    \cref{def:typical-execution} extends the definition of typical executions in~\cite{EPRINT:GarKiaLeo20} by adding lower bound on $D(S)$ in item (a).
+    %
+    Hence regarding the proof of the rest part in~\cref{def:typical-execution}, we refer to \cite{EPRINT:GarKiaLeo20}.
+    %
+    In this proof we only consider the probability of violating the lower bound on $D(S)$ and the eventual error probability.
+
+    Fix a set of $R \ge \ell$ consecutive rounds $S = s_1, s_2 \ldots, s_R$ and let $h_j, j \in [R]$ denote the number of honest queries make during round $s_j$.
+    %
+    We work on per query that alert parties make during $S$. Let $J$ denote the queries in $S$, $\nu = |J| = h(S)$, and $Z_i$ the difficulty of any block obtained from query $i$. Consider the sequence of random variables
+    %
+    \[ X_0 = 0; X_k = \sum_{i \in [k]} Z_i - \sum_{i \in [k]} \EX [Z_i | \E_{i - 1}], k \in [\nu]. \]
+    %
+    This is a martingale sequence with respect to sequence $(\E_0, \E_1, \ldots, \E_\nu)$ in that
+    %
+    \[ \EX [X_k | \E_{k - 1}] = \EX [Z_k - \EX [Z_k | \E_{k - 1}] | \E_{k - 1}] + \EX [X_{k - 1} | \E_{k - 1}] = X_{k - 1}. \]
+    %
+    The last equation follows the linearity of conditional expectation and the fact that $ X_{k - 1}$ is a deterministic function with respect to $\E_{k - 1}$.
+
+    Regarding the details relevant to~\cref{thm:martingale-bound}, we pick $t$ as
+    %
+    \[ \epsilon \sum_{i \in [\nu]} \EX [Z_i | \E_{i - 1} = E_{i - 1}] \le \epsilon \sum_{j \in [R]} p h_j = \epsilon p h(S) \defeq t \]
+    %
+    and consider an execution satisfying $G_t$.
+    %
+    Fix $i \in [\nu]$, let $j$ be the round $s_j$ that query $i$ belongs to.
+    %
+    Let
+    %
+    \[ Z_i - \EX [Z_i | \E_{i - 1} = E_{i - 1}] \le \frac{1}{T^{\min}_j} = \frac{p h_j}{p h_j T^{\min}_j} \le \frac{\gamma p h(S)}{p h_j T^{\min}_j R} \le \frac{\gamma p h(S)}{fR / (2\gamma^2)} = \frac{2\gamma^3 t}{\epsilon f R} \defeq b \]
+    %
+    and we see that the event $G$ implies $X_k - X_{k - 1} \le b$.
+    %
+    To get the bound on $V$, note that
+    %
+    \[ \Var (X_k - X_{k - 1} | \E_{k - 1}) = \EX[(Z_i - \EX [Z_i | \E_{i - 1}])^2 | \E_{k - 1}] = \EX [Z^2_i | \E_{k  -1}] - (\EX[Z_k | \E_{k - 1}])^2 \le \EX [Z^2_i | \E_{k  -1}]. \]
+    %
+    Hence, based on the independence of random variables as well as~\cref{fact:fluctuation-fact}(c), we pick $v$ as
+    %
+    \begin{align*}
+        \sum_{k \in [\nu]} \EX [Z^2_i | \E_{k - 1} = E_{k - 1}] \le  \sum_{j \in [R]} \sum_{i \in [h_j]} \frac{1}{T_i^2} \cdot p T_i & =  \sum_{j \in [R]} \frac{p h_j}{T^{\min}_j} =  \sum_{j \in [R]} \frac{(p h_j)^2}{p h_j T^{\min}_j}                                                 \\
+                                                                                                                                     & \le \frac{2 \gamma^2}{f} \sum_{j \in [R]} (p h_j)^2 \le \frac{2 \gamma^3}{f R} \cdot (p h(S))^2 \le \frac{2 \gamma^3 t^2}{\epsilon^2 f R} \defeq v.
+    \end{align*}
+
+    In view of these bounds (note that $bt = \epsilon v$), by~\cref{thm:martingale-bound} and Condition~\eqref{condition:min-length}, we have
+    %
+    \begin{equation} \label{eq:error-prob-ds-lower-bound}
+        \Pr [-X_\nu \ge t \wedge G_t] \le \exp \Big\{ -\frac{t^2}{2v (1 + \frac{\epsilon}{3})} \Big\} \le \exp \Big\{ -\frac{\epsilon^2 f R}{4\gamma^3 (1 + \frac{\epsilon}{3})} \Big\} \le e^{-\lambda}.
+    \end{equation}
+
+    Combining~\cref{eq:error-prob-ds-lower-bound} and those error probabilities in \cite{EPRINT:GarKiaLeo20}, we get asymptotically the same result. I.e., the probability that ``\E is not typical'' is bounded by $O(L^2)(e^{-\lambda} + 2^{-\kappa})$.
+\end{proof}
+
+\begin{proof}[Proof of~\cref{lemma:commonprefix}]
+    Suppose \chainHead{\chain \cap \chain'} was created in round $v$ and let
+    $u \le v$ be the greatest round in which an honest party computed a block on
+    $\chain \cap \chain'$.
+    %
+    Let $U = \{i : u < i \le r \}$, $S = \{i : u + \delay + \maxskew \le i \le r - (\delay + \maxskew) \}$, and let $J$ denote the adversarial queries that correspond to the rounds in $U$. Consider the following claim.
+
+    Below we say that $d \in \mathbb{R}$ is \emph{contained} in a block \block (and write $d \in \block$), when \block extends a chain \chain and $\chainDiff{\chain} < d \le \chainDiff{\chain \block}$.
+
+    \begin{claim*}
+        If $r - v \ge \ell + 2(\delay + \maxskew)$, then $2Q(S) \le D(U) + A(J)$.
+    \end{claim*}
+
+    \begin{proof}
+        Associate with each $r \in S$ such that $Q_r > 0$ an arbitrary honest block that is computed at round $r$ for difficulty $Q_r$.
+        %
+        Let $B$ be the set of these blocks and note that their difficulties sum to $Q(S)$.
+        %
+        We argue the existence of a set of blocks $B'$ computed in $U$ such that $B \cap B' = \emptyset$ and $\{ d \in \block : \block \in B \} \subseteq \{ d \in \block : \block \in B' \}$.
+        %
+        This suffices, because each block in $B'$ contributes either to $D(U) - Q(S)$ or to $A(J)$ and so $Q(S) \le D(U) - Q(S) + A(J)$.
+
+        Consider, then, a block $\block \in B$ extending a chain $\chain^*$ and let $d = \chainDiff{\chain^* \block}$. If $d \le \chainDiff{\chain \cap \chain'}$ (note that $u < v$ in this case and \chainHead{\chain \cap \chain'} is adversarial), let $\block'$ be the block of $\chain \cap \chain'$ containing $d$.
+        %
+        Such a block clearly exists and and was computed after $u$.
+        Furthermore, $\block' \notin B$, since $\block'$ was computed by the adversary.
+        %
+        If $d > \chainDiff{\chain \cap \chain'}$, note that there is a unique $\block \in B$ such that $d \in \block$ (recall the argument in Chain Growth \cref{lemma:chain-growth}).
+        %
+        Since \block cannot simultaneously be on \chain and $\chain'$, there is a $\block' \notin B$ either on \chain or on $\chain'$ that contains $d$.
+    \end{proof}
+
+    Since $S \ge \ell$ and \cref{lemma:nostalechains} implies that neither \chain nor $\chain'$ are stale, from~\cref{lemma:typical-execution-result}(a)(c) we get that $D(U) < (1 + 5\epsilon) Q(S)$ and $A(J) < (1 - \delta + 3\epsilon) Q(S)$, which implies $D(U) + A(J) < 2Q(S)$ when $\delta \ge 8 \epsilon$ (by Condition~\eqref{condition:absorb-error}).
+    %
+    This contradicts the claim above.
+    %
+    Hence, $r - v < \ell + 2(\delay + \maxskew)$.
+\end{proof}
