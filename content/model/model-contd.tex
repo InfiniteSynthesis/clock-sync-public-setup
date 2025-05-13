@@ -7,7 +7,7 @@ Functionality \funcImpClock maintains an internal variable $\tau_\sid$ (the nomi
 %
 This variable will never be revealed to neither honest parties nor registered
 functionalities, which captures the fact that clocks are local, and it is only
-accessible by \funcImpClock, the environment \environment, the adversary \adv and the (wrapped) random oracle functionality\wrapper{\funcRO}, after they send a \textsc{clock-read} command.
+accessible by \funcImpClock, the environment \Z, the adversary \adv and the (wrapped) random oracle functionality\wrapper{\funcRO}, after they send a \textsc{clock-read} command.
 %
 Notably, \wrapper{\funcRO} has to know the exact nominal time in order to coordinate with the environment so as to apply restrictions on adversarial queries and model dynamic participation.
 %
@@ -97,7 +97,7 @@ We highlight that our wrapper \wrapper{\funcRO} improves on previous wrappers in
       If \funcImpClock enters the next round, \wrapper{\funcRO} updates its internal clock counter as well and resets the RO counter $h_\tau$
       to 0.
       %
-      As long as $q_\adv < h_\tau$, where $h_\tau$ is a predetermined value provided by the environment \environment for nominal round $\tau$, \wrapper{\funcRO} forwards the queries to \funcRO.
+      As long as $q_\adv < h_\tau$, where $h_\tau$ is a predetermined value provided by the environment \Z for nominal round $\tau$, \wrapper{\funcRO} forwards the queries to \funcRO.
       %
       When $q_\adv \ge h_\tau$, which implies that the adversary has
       consumed all its allowed budget, the wrapper stops interaction with
@@ -126,6 +126,6 @@ We denote the network functionality disseminating blockchain information by $\fu
 %
 Parties will communicate with $\funcDiffuse^{\mathsf{bc}}$ and $\funcDiffuse^{\mathsf{tx}}$ to receive new chains and transactions in \textsf{FetchInformation}, and they will receive synchronization beacons by sending requests to $\funcDiffuse^{\mathsf{sync}}$ in \textsf{ProcessBeacons}.
 %
-Refer to \cref{subsec:fetch-information,subsec:process-beacons-arrival-times} for further details.
+Refer to~\cref{protocol:fetch-information,protocol:process-beacons} for further details.
 
 \input{functionalities/diffuse}
