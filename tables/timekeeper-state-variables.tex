@@ -1,0 +1,47 @@
+\begin{tabularx}{\textwidth}{c X}
+    \toprule
+    \textbf{Variable}
+     & \textbf{Description}
+    \\ \midrule
+    \localTime
+     & The party \party's current timestamp in the form of
+    \protocolTime{\interval}{\round}.
+    \\ \midrule
+    \interval
+     & The interval that \round belongs to.
+    \\ \midrule
+    \epoch
+     & The epoch that \round belongs to.
+    \\ \midrule
+    \chainLocal
+     & The local chain the party adopts based on which it does mining and
+    exports the ledger state.
+    \\ \midrule
+    \buffer
+     & A buffer of transactions.
+    \\  \midrule
+    \futureChains
+     & A buffer to store chains with blocks whose timestamps belong to the
+    future (logical) rounds.
+    \\ \midrule
+    $\mathsf{arrivalTime}_{SB}(\cdot)$
+     & A map that assigns to each synchronization beacon a pair $(a, b)$,
+    where $a$ is the arrival time and $b$ is an indication of whether $a$
+    is \textsf{final} or \textsf{temp}.
+    \\ \midrule
+    $\mathsf{arrivalTime}(\cdot)$
+     & Shorthand for the first (arrival time) element of the pair $\mathsf{arrivalTime}_{SB}(\cdot)$.
+    \\ \midrule
+    \isSync
+     & A bit variable to store the synchronization status.
+    \\ \midrule
+    $\mathtt{fetchCompleted}$
+     & A variable to store whether the round messages have been fetched.
+    \\ \midrule
+    $\mathtt{lastTimeAlert}$
+     & The timestamp which stores the last alert time. Used for rejoining if
+    the party was only stalled.
+    \\ \bottomrule
+    \caption{Main state variables in \timekeeper.}
+    \label{table:state-variables}
+\end{tabularx}

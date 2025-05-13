@@ -1,0 +1,53 @@
+\begin{tabularx}{\textwidth}{c X}
+    \toprule
+    \textbf{Parameter}
+     & \textbf{Description}
+    \\ \midrule
+    $h_r$
+     & The number of honest RO queries in (nominal) round $r$.
+    \\ \midrule
+    $t_r$
+     & The number of RO queries by \adv in (nominal) round $r$.
+    \\ \midrule
+    $\delta$
+     & Advantage of honest parties ($t_r < (1 - \delta) h_r$ for all $r$).
+    \\ \midrule
+    $f$
+     & The probability at least one honest RO query out of $n_0$ computes a
+    block for target $T_0$.
+    \\ \midrule
+    \syncLen
+     & The length of a clock synchronization interval in number of rounds.
+    \\ \midrule
+    \diffLen
+     & The length of a target recalculation epoch in number of rounds.
+    \\ \midrule
+    \CPLen
+     & The length of convergence phase in a clock synchronization interval
+    in number of rounds.
+    \\ \midrule
+    \delay
+     & Network delay in rounds.
+    \\ \midrule
+    \maxdrift
+     & The upper bound of the drift that \adv can set.
+    \\ \midrule
+    \maxskew
+     & The upper bound of the difference between honest parties' local clocks. We require that $\maxskew = \maxdrift + \delay$.
+    \\ \midrule
+    $\kappa$
+     & Security parameter; length of the hash function output.
+    \\ \midrule
+    $(\gamma, s)$
+     & Respecting environment parameter.
+    \\ \midrule
+    $\epsilon$
+     & Quality of concentration of random variables.
+    \\ \midrule
+    $\lambda$
+     & Security parameter; related to the properties of the protocol.
+    \\ \bottomrule
+    
+    \caption{Main Parameters of \timekeeper.}
+    \label{table:protocol-params}
+\end{tabularx}
