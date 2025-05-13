@@ -1,0 +1,69 @@
+\subsection{Typical Executions}
+\label{subsec:typical-exeuctions}
+
+We define the notion of \emph{typical} executions following~\cite{C:GarKiaLeo17,EPRINT:GarKiaLeo20}.
+%
+The idea here is that given a certain execution $E$, we compare the actual progress and the expected progress that parties will make under the success probabilities.
+%
+If the difference and variance are reasonably small, and no bad events (see~\cref{def:insertion-copy-prediction}) about the underlying hash function happen, we declare $E$ \emph{typical}.
+
+\begin{definition} \label{def:insertion-copy-prediction}
+    An insertion occurs when, given a chain \chain with two consecutive blocks \block and $\block'$, a block $\block^*$ created after $\block'$ is such that $\block, \block^*, \block'$ form three consecutive blocks of a valid chain.
+    %
+    A copy occurs if the same block exists in two different positions.
+    %
+    A prediction occurs when a block extends one with later creation time.
+\end{definition}
+
+Note that in addition (compared to~\cite{C:GarKiaLeo17,EPRINT:GarKiaLeo20}), in~\cref{def:typical-execution}(a) we require that the difficulty of all blocks the alert parties can acquire during consecutive rounds $S$ (i.e., $D(S)$) is well lower-bounded.
+%
+This is because $D(S)$ also captures the beacon production process, where there is no loss incurred by the bounded-delay network as well as by skewed local clocks.
+%
+Hence, a reasonably better lower-bound on $D(S)$ helps us get better results when arguing for the good properties of generated beacons by alert parties (\cref{lemma:goodbeacons}).
+
+\begin{definition}
+    [Typical Execution]
+    \label{def:typical-execution}
+
+    An execution E is typical if the following hold.
+    %
+    \begin{enumerate}[label=(\alph*), leftmargin=*, noitemsep]
+        \item For any set $S$ of at least $\ell$ consecutive good rounds,
+              %
+              \[ (1 - \epsilon)[1 - (1 + \delta) \gamma^2 f]^\delay p h(S) < Q(S) \le D(S) < (1 + \epsilon) p h(S) ~~\text{and}~~ D(S) > (1 - \epsilon) p h(S). \]
+
+        \item For any set $J$ of consecutive adversarial queries and $\alpha(J) = 2(\frac{1}{\epsilon} + \frac{1}{3})\lambda / T(J)$,
+              %
+              \[ A(J) < p|J| + \max \{\epsilon p |J|, \tau \alpha(J)\} ~~\text{and}~~ B(J)< p|J| + \max \{\epsilon p |J|, \alpha(J)\}. \]
+
+        \item No insertions, no copies, and no predictions occurred in $E$.
+    \end{enumerate}
+\end{definition}
+
+In the next lemma, we establish the quantitative relation between honest and adversarial hashing power during consecutive rounds with length at least $\ell$, as well as the relationship between the total difficulty acquired by all parties ($D(S) + A(J)$) and their hashing power.
+
+\begin{lemma} \label{lemma:typical-execution-result}
+    Consider a typical execution in a $(\gamma, s)$-respecting environment.
+    %
+    Let $S = \{r : u \le r \le v \}$ be a set of at least $\ell$ consecutive good rounds and $J$ the set of adversarial queries in $U = \{ r : u - \delay - \maxskew \le r \le v + \delay + \maxskew \}$.
+    %
+    We have
+    %
+    \begin{enumerate}[label=(\alph*), leftmargin=*, noitemsep]
+        \item $(1 + \epsilon) p|J| \le Q(S) \le D(U) < (1 + 5\epsilon) Q(S)$.
+
+        \item $T(J) A(J) < \epsilon \diffLen f / 4(1 + \delta)$ or $A(J) < (1 + \epsilon)p|J|$; $\tau T(J) B(J) < \epsilon \diffLen f / 4(1 + \delta)$ or $B(J) < (1 + \epsilon) p|J|$.
+
+        \item If $w$ is a good round such that $|w - r| \le s$ for any $r \in S$, then $Q(S) > (1 - \epsilon) [1 - (1 + \delta) \gamma^2 f]^\delay |S| p n_w / \gamma$.
+              %
+              If in addition $T(J) \ge T^{\min}_w$ , then $A(J) < (1 - \delta + 3\epsilon) Q(S)$.
+
+        \item If $w$ is a good round such that $|w - r| \le s$ for any $r \in S$ and $T(J) \ge T^{\min}_w$, then $D(S) + A(J') < (1 + \epsilon) p(h(S) + |J'|)$ where $J'$ denotes the set of adversarial queries in $S$.
+    \end{enumerate}
+\end{lemma}
+
+We conclude that almost all executions (that are polynomially bounded by $\kappa$ and $\lambda$) are typical.
+
+\begin{theorem} \label{thm:typical-execution-error-prob}
+    Assuming the ITM system $(\Z, C)$ runs for $L$ steps, the probability of the event ``\E is not typical'' is bounded by $O(L^2)(e^{-\lambda} + 2^{-\kappa})$.
+\end{theorem}

@@ -1,0 +1,92 @@
+\begin{figure*}[ht]
+    \centering
+    \usetikzlibrary{calc}
+    \tikzstyle{zblock} = [rectangle, text=black, minimum width = .5in, minimum height = .25in]
+
+    \begin{tikzpicture}
+        [fill fraction/.style n args={2}{path picture={\fill[#1] (path picture bounding box.south west) rectangle($(path picture bounding box.north west)!#2!(path picture bounding box.north east)$);}}]
+        \footnotesize
+
+        \node[zblock, fill=themeColor3!80] (block11) {$t - 1$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block12) at  ([xshift = 1pt]block11.east) {$t$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block13) at  ([xshift = 1pt]block12.east) {$t + 1$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block14) at  ([xshift = 1pt]block13.east) {$t + 2$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block15) at  ([xshift = 1pt]block14.east) {$t + 3$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block16) at  ([xshift = 1pt]block15.east) {$t + 4$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block17) at  ([xshift = 1pt]block16.east) {$t + 5$};
+        \node[zblock, fill=themeColor!80, anchor = west] (block18) at  ([xshift = 1pt]block17.east) {$t + 6$};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block19) at  ([xshift = 1pt]block18.east) {$t + 7$};
+
+        \node[zblock, fill=themeColor3!80, anchor = north] (block21) at  ([yshift = -1pt]block11.south) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block22) at  ([xshift = 1pt]block21.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block23) at  ([xshift = 1pt]block22.east) {};
+        \node[zblock, fill=themeColor2!80, fill fraction={themeColor3!80}{0.3}, anchor = west] (block24) at  ([xshift = 1pt]block23.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block25) at  ([xshift = 1pt]block24.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block26) at  ([xshift = 1pt]block25.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block27) at  ([xshift = 1pt]block26.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block28) at  ([xshift = 1pt]block27.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block19) at  ([xshift = 1pt]block28.east) {};
+
+        \node[zblock, fill=themeColor3!80, anchor = north] (block31) at  ([yshift = -1pt]block21.south) {};
+        \node[zblock, fill=themeColor2!80, fill fraction={themeColor3!80}{0.5}, anchor = west] (block32) at  ([xshift = 1pt]block31.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block33) at  ([xshift = 1pt]block32.east) {};
+        \node[zblock, fill=themeColor2!80, , anchor = west] (block34) at  ([xshift = 1pt]block33.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block35) at  ([xshift = 1pt]block34.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block36) at  ([xshift = 1pt]block35.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block37) at  ([xshift = 1pt]block36.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block38) at  ([xshift = 1pt]block37.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block39) at  ([xshift = 1pt]block38.east) {};
+
+        \node[zblock, fill=themeColor3!80, anchor = north] (block41) at  ([yshift = -1pt]block31.south) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block42) at  ([xshift = 1pt]block41.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block43) at  ([xshift = 1pt]block42.east) {};
+        \node[zblock, fill=themeColor3!80, , anchor = west] (block44) at  ([xshift = 1pt]block43.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block45) at  ([xshift = 1pt]block44.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block46) at  ([xshift = 1pt]block45.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block47) at  ([xshift = 1pt]block46.east) {};
+        \node[zblock, fill=themeColor2!80, fill fraction={themeColor3!80}{0.5}, anchor = west] (block48) at  ([xshift = 1pt]block47.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block49) at  ([xshift = 1pt]block48.east) {};
+
+        \node[zblock, fill=themeColor3!80, anchor = north] (block51) at  ([yshift = -1pt]block41.south) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block52) at  ([xshift = 1pt]block51.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block53) at  ([xshift = 1pt]block52.east) {};
+        \node[zblock, fill=themeColor2!80, , anchor = west] (block54) at  ([xshift = 1pt]block53.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block55) at  ([xshift = 1pt]block54.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block56) at  ([xshift = 1pt]block55.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block57) at  ([xshift = 1pt]block56.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block58) at  ([xshift = 1pt]block57.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block59) at  ([xshift = 1pt]block58.east) {};
+
+        \node[zblock, fill=themeColor3!80, anchor = north] (block61) at  ([yshift = -1pt]block51.south) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block62) at  ([xshift = 1pt]block61.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block63) at  ([xshift = 1pt]block62.east) {};
+        \node[zblock, fill=themeColor3!80, , anchor = west] (block64) at  ([xshift = 1pt]block63.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block65) at  ([xshift = 1pt]block64.east) {};
+        \node[zblock, fill=themeColor3!80, anchor = west] (block66) at  ([xshift = 1pt]block65.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block67) at  ([xshift = 1pt]block66.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block68) at  ([xshift = 1pt]block67.east) {};
+        \node[zblock, fill=themeColor2!80, anchor = west] (block69) at  ([xshift = 1pt]block68.east) {};
+
+        \node[zblock, fill=themeColor3!80, anchor = north] (block71) at  ([yshift = -1pt]block61.south) {$\epoch - 1$};
+        \node[zblock, fill=themeColor2!80, anchor = north] (block79) at  ([yshift = -1pt]block69.south) {\epoch};
+
+        \node[rectangle, text=black, minimum width = 3.62in, minimum height = .25in, fill=themeColor!80, anchor = west] (block72) at  ([xshift = 1pt]block71.east) {Target Recalculation Zone $Z_\epoch$};
+
+        \node[zblock, anchor = east] (block10) at  ([xshift = -1pt]block11.west) {time};
+        \node[zblock, anchor = east] (block20) at  ([xshift = -1pt]block21.west) {$\party_1$};
+        \node[zblock, anchor = east] (block30) at  ([xshift = -1pt]block31.west) {$\party_2$};
+        \node[zblock, anchor = east] (block40) at  ([xshift = -1pt]block41.west) {$\party_3$};
+        \node[zblock, anchor = east] (block50) at  ([xshift = -1pt]block51.west) {$\party_4$};
+        \node[zblock, anchor = east] (block60) at  ([xshift = -1pt]block61.west) {$\party_5$};
+        \node[zblock, anchor = east] (block70) at  ([xshift = -1pt]block71.west) {Env.};
+    \end{tikzpicture}
+
+    \caption{
+        An illustration of the target recalculation zone $Z_\epoch = \{t, \ldots, t + 6 \}$.
+        %
+        In the first and the last row (regarding [nominal] time and Env.), \fcolorbox{themeColor3!80}{themeColor3!80}{\rule{0pt}{5pt}\rule{5pt}{0pt}} indicates the protocol execution is in epoch $\epoch - 1$; \fcolorbox{themeColor2!80}{themeColor2!80}{\rule{0pt}{5pt}\rule{5pt}{0pt}} implies the execution is in epoch \epoch; and \fcolorbox{themeColor!80}{themeColor!80}{\rule{0pt}{5pt}\rule{5pt}{0pt}} shows the target recalculation zone $Z_\epoch$.
+        %
+        Regarding parties, \fcolorbox{themeColor3!80}{themeColor3!80}{\rule{0pt}{5pt}\rule{5pt}{0pt}} represents RO queries w.r.t. $\epoch - 1$, and \fcolorbox{themeColor2!80}{themeColor2!80}{\rule{0pt}{5pt}\rule{5pt}{0pt}} represents RO queries w.r.t. \epoch.
+    }
+    \label{fig:target-recalculation-zone}
+\end{figure*}

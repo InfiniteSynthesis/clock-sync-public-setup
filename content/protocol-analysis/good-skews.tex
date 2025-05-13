@@ -1,0 +1,368 @@
+\subsection{Typical Executions Maintain Good Skews}
+
+In this section, we show that in a typical execution, alert parties maintain close local clocks, and that the shift that they compute at the end of an interval is well-bounded.
+%
+Before we consider $\textsc{GoodBeacons}(r)$, we establish the following lemma that bounds the adversary from pre-mining for too long a time.
+
+\begin{lemma} \label{lemma:beacon-pre-mining}
+    Consider an interval \interval, and suppose $r$ is the smallest nominal round where all alert parties stay in the beacon mining and inclusion phase.
+    %
+    Then the adversary can mine timestamp beacons w.r.t. \interval no earlier than $r - (2\ell + 4\delay + 9\maxskew)$.
+\end{lemma}
+
+\begin{proof}
+    Since we adopt the CRS recorded in the genesis block as the original fresh randomness, by our simultaneously-start assumption, in interval $\interval = 1$ the adversary can start to mine beacons at most $\CPLen = \ell + 2\delay + 4\maxskew$ rounds before the alert parties.
+
+    Consider an interval $\interval > 1$. Recall that in~\cref{eq:compute-freshness}, the fresh randomness w.r.t. interval \interval is computed by hashing the concatenation of all blocks in the previous interval, in order to prove the lemma, it suffices to show that the production time of the last block is no earlier than  $r - 2\ell + 4\delay + 9\maxskew$.
+    %
+    Otherwise, it implies a prediction (cf.~\cref{def:insertion-copy-prediction}), which contradicts the fact that execution is typical.
+
+    For the sake of a contradiction, assume that the last block \block in interval $\interval - 1$ is computed at a nominal round $r' < r - 2\ell + 4\delay + 9\maxskew$.
+    %
+    Let $\block'$ be the first honest block after \block.
+    %
+    $\block'$ is produced at round at most $r'' = r' + \ell + 2\delay + 2\maxskew \le r - (\ell + 2\delay + 7\maxskew)$; otherwise, the chain becomes stale at round $r''$.
+    %
+    We consider the timestamp of $\block'$.
+    %
+    Since $\block'$ is at least $\ell + 2\delay + 7\maxskew$ (nominal) rounds before all honest parties start to mine beacons (which happens when local clocks of all alert parties pass \protocolTime{\interval}{(\interval - 1) \cdot \syncLen + \ell + 2\delay + 4\maxskew}), $\block'$ cannot report a timestamp \protocolTime{\interval}{\cdot}.
+    %
+    This is because $\textsc{GoodShift}(r - 1)$ implies that the backward shift at the end of interval $\interval - 1$ is at most $2\maxskew$; $\textsc{GoodSkew}(r - 1)$ indicates that all alert parties will start to mine beacons at most \maxskew rounds after at least one of them enter \protocolTime{\interval}{(\interval - 1) \cdot \syncLen + \ell + 2\delay + 4\maxskew} and parties will wait for $\ell + 2\delay + 4\maxskew$ round at the beginning of interval \interval.
+    %
+    After summing them up we get $\ell + 2\delay + 7\maxskew$.
+    %
+    Hence, $\block'$ must report a timestamp \protocolTime{\interval - 1}{\cdot}.
+    %
+    This contradicts our assumption that \block is the last block in $\interval - 1$.
+\end{proof}
+
+Next, we prove $\textsc{GoodBeacons}(r)$.
+%
+This predicate implies that at the boundary of every synchronization interval, alert parties will use the same set of beacons to update their local clock; further, the majority of these beacons are produced and issued by alert parties.
+
+Note that, when  the sequence of rounds $S$ and queries $J$ are appropriately selected, random variables $D(S)$ and $A(J)$ directly map to the number of synchronization beacons that protocol participants can produce during the beacon mining and inclusion phase.
+%
+We are interested in using a typical execution to lower-bound the success of alert parties and upper-bound the success of the adversary (i.e., lower-bound $D(S)$ and upper-bound $A(J)$ in~\cref{def:typical-execution}).
+
+\lemmagoodbeacons
+
+\begin{proof}
+    Consider an interval \interval and a chain \chain held by an alert party at local round \protocolTime{\interval}{\interval \cdot \syncLen}.
+    %
+    Let $d$ denote the sum of difficulties of the synchronization beacons recorded in blocks with timestamp round \Isync{\interval}.
+
+    Since $\CPLen = \ell + 2\delay + 4\maxskew$ by~\cref{corollary:common-prefix-parameter}, honest parties agree on the beacon mining and inclusion phase in \chain.
+    %
+    Hence, every honest party would have the same view of the beacon set they are going to use.
+    %
+    Now we prove that the majority of these beacons are produced by alert parties.
+
+    Let $u$ denote the first (nominal) round such that all alert parties are mining beacons w.r.t. interval \interval.
+    %
+    Consider a set of consecutive nominal rounds $S = \{i : u \le i \le v \}$ where $v = u + \syncLen - 2(\ell + 2\delay + 4\maxskew) - \maxskew$, where all the honest queries in $S$ are doing 2-for-1 PoW w.r.t. interval \interval and hence contribute to the honest beacon set.
+    %
+    Let \block be the last block produced by honest parties before round $v$ and denote its production time by $w$ (in terms of the nominal time index).
+    %
+    Since \chain will become stale if there is no honest block since $w$ for $\ell + 2\delay + 2\maxskew$ rounds, we get that $w < v - (\ell + 2\delay + 2\maxskew)$.
+
+    Let $S_1 = \{i : u \le i \le w - (\delay + \maxskew) \}$ and $S_2 = \{i :u - (2\ell + 4\delay + 9\maxskew) \le i \le w + (\ell + 2\delay + 2\maxskew) \}$.
+    %
+    $S_1$ is the time interval that honest success can contribute to the beacon set w.r.t. interval \interval; and $S_2$ is for the adversary.
+    %
+    The lower bound of $S_1$ is derived from the definition of $u$ and the upper bound is because it will take up to $\delay + \maxskew$ rounds for all beacons to be diffused to and accepted by all alert parties.
+    %
+    The lower bound of $S_2$ is acquired due to the unpredictability discussed in~\cref{lemma:beacon-pre-mining}.
+    %
+    Regarding the upper bound of $S_2$, it is achieved by considering the first honest block $\block'$ after $v$, which is produced no later than $w' = w + \ell + 2\delay + 2\maxskew$ (otherwise it violates \textsc{NoStaleChains}).
+    %
+    The adversary can no longer include beacons to the mining and inclusion phase after $w'$ as it can no longer revert $\block'$, so all the subsequent beacons produced after $w'$ are invalid w.r.t. the current chain.
+    %
+    Note that $|S_1| \ge \syncLen - (3\ell + 7\delay + 12\maxskew) \ge \syncLen - 3(\ell + 2\delay + 7\maxskew)$ and $|S_2 \backslash S_1| = 3\ell + 7\delay + 12\maxskew \le 3(\ell + 2\delay + 7\maxskew)$.
+
+    Let $J$ denote the adversarial queries associated with $S_2$.
+    %
+    In order to prove that alert parties can produce at least half of synchronization beacons, it suffices to show that
+    %
+    \[ D(S_1) > d / 2. \]
+    %
+    We first show that the number of RO queries alert parties can make during $S_2$ is at most $4\epsilon$ more than those in $S_1$.
+    %
+    We have
+    %
+    \[ h(S_2) \le (1 + \frac{\gamma |S_2 \backslash S_1| }{|S_1|}) h(S_1) \le (1 + \frac{3\gamma (\ell + 2\delay + 7\maxskew)}{\syncLen - 3(\ell + 2\delay + 7\maxskew)}) h(S_1) \le (1 + \frac{3\epsilon}{1 - 3\epsilon / \gamma}) h(S_1) < (1 + 4\epsilon) h(S_1). \]
+    %
+    The first inequality follows from~\cref{fact:fluctuation-fact}(b); the third one holds since $\ell + 2\delay + 7\maxskew \le \epsilon \syncLen / \gamma$ by Condition~\eqref{condition:min-length}; the last inequality is a consequence of Condition~\eqref{condition:absorb-error} ($\epsilon < 1 / 12$).
+    %
+    Next,
+    %
+    \begin{align*}
+        D(S_1) \ge (1 - \epsilon) p h(S_1) & > (1 - 5\epsilon) p h(S_2) > \frac{1 - 5\epsilon}{2 - \delta} p [h(S_2) + |J|]
+        \\
+                                           & > \frac{1 - 6\epsilon}{2 - \delta} [D(S_2) + A(J)] > \frac{1 - 6\epsilon}{2 - \delta} [D(S_1) + A(J)] \ge \frac{1}{2} [D(S_1) + A(J)] = \frac{d}{2}.
+    \end{align*}
+    %
+    The first inequality follows from typical execution (\cref{def:typical-execution}(a)); the second one is achieved by substituting $h(S_1)$ with $h(S_2)$; the next inequality follows from the honest majority assumption; and the forth one is by applying~\cref{lemma:typical-execution-result}(d); the last inequality holds due to Condition~\eqref{condition:absorb-error} ($\delta \ge 12 \epsilon$).
+\end{proof}
+
+Given an honest-majority beacon set, we are ready to prove $\textsc{GoodSkew}(r)$ and $\textsc{GoodShift}(r)$.
+%
+Regarding the proof of $\textsc{GoodSkew}(r)$, note that we will consider both the synchronized parties and the newly joining parties.
+%
+The proof approach is as follows.
+%
+We first prove that for parties in the same interval, their local clock can deviate for up to \maxskew rounds (\cref{lemma:goodskew-same-interval}).
+%
+Next, we show that the shift computed at the boundary of each interval satisfies our \textsc{GoodShift} predicate (\cref{lemma:goodshift}).
+%
+Then, we argue that the $2\maxskew$-drift holds for parties in different intervals (\cref{lemma:goodskew-different-interval}).
+%
+For those newly joining parties, we also prove that they can learn a clock value that is \maxskew-round close to any of the alert parties (\cref{lemma:goodskew-new-party}).
+%
+Finally, combining~\cref{lemma:goodskew-same-interval,lemma:goodskew-different-interval,lemma:goodskew-new-party}, we obtain the desired clock skews.
+
+\begin{lemma} \label{lemma:goodskew-same-interval}
+    For a typical execution in a $(\gamma, s)$-respecting environment, if all predicates in~\cref{def:analysis-predicate} hold till $r - 1$, then at round $r$, the local time of alert parties in the same interval differs by at most \maxskew.
+\end{lemma}
+
+\begin{proof}
+    For nominal rounds that all alert parties stay in interval $\interval  = 1$, their local clock can differ with each other for up to $\maxdrift < \maxskew$ rounds in that no clock synchronization happened and only the adversary can set a \maxdrift-bounded drift.
+    %
+    Recall that alert parties only adjust their local clock (call \textsf   {SyncProcedure}, see~\cref{protocol:sync-proc}) when it enters the last round of current interval.
+
+    Now we consider a nominal round $r$ such that at least one alert party enters the next interval $\interval + 1$.
+    %
+    We show that for those parties that have finished adjusting their clock, the logical time that they report can deviate from each other for up to \maxskew rounds.
+
+    According to~\cref{lemma:goodbeacons}, alert parties will agree on the same synchronization beacon set (denoted by $SB_\interval$) at the end of \interval.
+    %
+    Fix a beacon $\beacon \in SB_\interval$.
+    %
+    Consider two alert parties $\party_1$ and $\party_2$ that have entered $\interval + 1$.
+    %
+    We are going to show that the quantity
+    %
+    \[ \mu (\party_i, \beacon) \triangleq \round_i + \timestamp{\beacon} - \party_i.\mathsf{arrivalTime}(\beacon) \]
+    %
+    will differ by at most \maxskew between any two alert parties $\party_1$ and $\party_2$, where $\round_i$ refers to the time that party $\party_i$ reports at nominal time $r$ if it does not call \textsf{SyncProcedure} at the end of \interval.
+    %
+    More precisely, $\mu (\party_i, \beacon)$ is the logical time that $\party_i$ will report at nominal round $r$\footnote{We note that while an alert party may pass several logical rounds in a nominal round, it does not hurt our argument here as long as the adversarial drift is bounded by an absolute value.} if it adopts \beacon and computes the corresponding shift $\shift_i$ to update its clock (at the end of \interval).
+
+    The arrival time of \beacon bookkeeped by $\party_i$ can be represented by
+    %
+    \[ \party_i.\mathsf{arrivalTime}(\beacon) = \round_i - (r - r_\beacon) + \delta_{\party_i, \beacon} + \varphi_{\party_i, \beacon}. \]
+    %
+    $r_\beacon$ is the nominal round that \beacon is emitted to the network if \beacon is honest, and is the first nominal round such that at least one honest party receives \beacon if \beacon is adversarial.
+    %
+    $\delta_{\party_i, \beacon} \in [\delay]$ is the time elapsed (counted by rounds in terms of the nominal time) for \beacon to be delivered to $\party_i$.
+    %
+    $\varphi_{\party_i, \beacon} \in [-\maxdrift, \maxdrift]$ is the drift of $\party_i$ when \beacon was sent (note that for two alert parties $\party_1, \party_2$ we have $|\varphi_{\party_1, \beacon} - \varphi_{\party_2, \beacon} | \le \maxdrift$ by the clock drift assumption).
+    %
+    By substituting we get
+    %
+    \begin{equation} \label{eq:shift-compute}
+        \mu(\party_i, \beacon) = \round_i + \shift_i = \timestamp{\beacon} + r - r_\beacon - \delta_{\party_i, \beacon} - \varphi_{\party_i, \beacon}.
+    \end{equation}
+    %
+    Note that for different parties at nominal round $r$, $\timestamp{\beacon} + r - r_\beacon$ is a constant.
+    %
+    Hence $|\mu(\party_1, \beacon) - \mu(\party_2, \beacon)| \le \maxskew$.
+    We highlight this holds for adversarially generated \beacon in that after \beacon is delivered to at least one honest party (denoted by $r_\beacon$), it will be delivered to all honest parties within \delay rounds.
+
+    Consider two alert parties $\party_1, \party_2 \in \partyset_{\mathsf{alert}}[r]$ with timestamp \protocolTime{\interval + 1}{\cdot} (i.e., they have finished synchronization).
+    %
+    Tuples $(\mu(\party_1, \beacon))_{\beacon \in \mathcal{S}_{\interval}}$ and $(\mu(\party_2, \beacon))_{\beacon \in \mathcal{S}_{\interval}}$ are all the potential times that they will report.
+    %
+    These two tuples are of the same size, and $\forall \beacon \in \mathcal{S}_{\interval}, |\mu(\party_1, \beacon) - \mu(\party_2, \beacon)| \le \maxskew$.
+    %
+    Due to~\cref{fact:seq-med} we get
+    %
+    \[ \bigg| \med \Big( (\mu(\party_1, \beacon))_{\beacon \in \mathcal{S}_\interval} \Big) - \med \Big( (\mu(\party_2, \beacon))_{\beacon \in\mathcal{S}_\interval} \Big) \bigg| \le \maxskew. \]
+    %
+    Recalling~\cref{eq:sync-shift}, $\med(\mu(\party_i, \beacon))_{\beacon \in \mathcal{S}_\interval} = r_i + \med \{ \timestamp{\beacon} - \party_i.\mathsf{arrivalTime}(\beacon) \mathbin| \beacon \in \mathcal{S}_\interval \} = r_i + \shift_\interval^{\party_i}$ is the logical time that $\party_i$ reports after the synchronization. Therefore alert clocks that have already entered $\interval + 1$ will deviate from each other for up to \maxskew rounds.
+
+    Finally, in order to conclude the proof, it suffices to show that during nominal rounds in interval $\interval > 1$ that no adjustment happens, the difference of alert parties' local clocks will not deviate for more than \maxskew rounds.
+    %
+    This always holds in that the difference of honest parties' drifts in the execution of \timekeeper is an absolute term (recall \maxdrift and the condition check in \textsc{clock-forward} as well as \textsc{clock-backward} in \funcImpClock), thus adversarial manipulation cannot set $\varphi_{\party_i, \beacon}$ to a value that violates the upper bound of clock skews.
+\end{proof}
+
+\lemmagoodshift
+
+\begin{proof}
+    For a party \party that calls \textsf{SyncProcedure} at nominal round $r$, we prove that $-2\maxskew < \shift < \maxskew$.
+
+    Let \beacon denote the median beacon \party adopted, and \shift the corresponding shift value.
+    %
+    Since $\textsc{GoodBeacons}(r - 1)$ holds, we will have two alert parties $\party_1$ and $\party_2$ who produce synchronization beacons $\beacon_1$ and $\beacon_2$, respectively.
+    %
+    We denote the shifts w.r.t. $\beacon_1, \beacon_2$ by $\shift_1, \shift_2$ (based on \party's local arrival timetable) and learn that $\shift_1 \le \shift \le \shift_2$.
+    %
+    This implies  $\mu(\party, \beacon_1) \le \mu(\party, \beacon) \le \mu(\party, \beacon_2)$ (recall the definition of $\mu(\party, \beacon)$ in~\cref{lemma:goodskew-same-interval}).
+    %
+    Further, we extract these quantities by Equation~\eqref{eq:shift-compute} in the following way.
+    %
+    For $\mu(\party, \beacon)$, we consider it with respect to the shift value, and for the rest we substitute them in terms of the timestamp recorded in $\beacon_i$ (i.e., the last expression in~\cref{eq:shift-compute}).
+    %
+    We have
+    %
+    \[ \timestamp{\beacon_1} - r_{\beacon_1} - \delta_{\party, \beacon_1} - \varphi_{\party, \beacon_1} \le \round_i - r + \shift \le \timestamp{\beacon_2} - r_{\beacon_2} - \delta_{\party, \beacon_2} - \varphi_{\party, \beacon_2}. \]
+    %
+    By letting $\delta_{\party, \beacon_1} = \delay$, $\varphi_{\party, \beacon_1} = \maxdrift$ and $\delta_{\party, \beacon_2} = \varphi_{\party, \beacon_2}  = 0$, we get
+    %
+    \begin{equation} \label{eq:shift-range-1}
+        \timestamp{\beacon_1} - r_{\beacon_1} - \maxskew \le \round_i - r + \shift \le \timestamp{\beacon_2} - r_{\beacon_2}.
+    \end{equation}
+    %
+    Note that no clock adjustment on \party happened during nominal time $[\min \{ r_{\beacon_1}, r_{\beacon_2}\}, r)$.
+    %
+    Moreover, if the adversary does not set a drift and the beacon is delivered to all alert parties immediately after it was mined, we will have $\round_i - r = \timestamp{\beacon_i} - r_{\beacon_i}$.
+    %
+    Since the adversarial drift is upper bounded by the absolute term \maxdrift, and the network is \delay-bounded delay, we learn that the difference of $\timestamp{\beacon_i} - r_{\beacon_i}$ and $\round_i - r$ is bounded by $\maxdrift + \delay = \maxskew$.
+    %
+    Therefore, we get
+    %
+    \begin{equation} \label{eq:shift-range-2}
+        \big| (\timestamp{\beacon_i} - r_{\beacon_i}) - (\round_i - r) \big| \le \maxskew.
+    \end{equation}
+    %
+    After combining~\cref{eq:shift-range-1,eq:shift-range-2}, we get the desired range for $\shift$, namely, $-2\maxskew < \shift < \maxskew$.
+\end{proof}
+
+\begin{lemma} \label{lemma:goodskew-different-interval}
+    For a typical execution in a $(\gamma, s)$-respecting environment, if all predicates in~\cref{def:analysis-predicate} hold till $r - 1$, then at round $r$, the local time of alert parties in different interval differs by at most $2\maxskew$.
+\end{lemma}
+
+\begin{proof}
+    Consider two alert parties $\party_1, \party_2$ that $\party_1$ finishes running \textsf{SyncProcedure} at nominal time $r$ and $\party_2$ does not.
+    %
+    Note that before the synchronization, $\round_1 - \maxskew \le \round_2 < \round_1$ holds because they are alert and hence skew predicate satisfies (and, since $\party_1$ runs \textsf{SyncProcedure} first, its local time is larger than $\party_2$).
+    %
+    Let $\round'_1 = \round_1 + \shift_1$ denote the logical time that $\party_1$ owns after synchronization, we have
+    %
+    \[ |\round_2 - \round'_1| \le 2\maxskew \]
+    %
+    after combining $\round_1 - \maxskew \le \round_2 < \round_1$ and $-2\maxskew < \shift_1 < \maxskew$ from~\cref{lemma:goodshift}.
+\end{proof}
+
+\begin{lemma} \label{lemma:goodskew-new-party}
+    For a typical execution in a $(\gamma, s)$-respecting environment, if all predicates in~\cref{def:analysis-predicate} hold till $r - 1$, then for a newly joining party who concludes the join procedure at round $r$, the following properties hold.
+    %
+    \begin{enumerate}[label=(\alph*), leftmargin=*, nosep]
+        \item Let $\chain_{\mathsf{join}}$ denote the chain held by $\party_{\mathsf{join}}$ at nominal round $r' \le r$ and $\party_{\mathsf{join}}$ is in Phase C or D; let $\chain_{\mathsf{alert}}$ denote a chain held by $\party_{\mathsf{alert}}$ at the same nominal time.
+              % 
+              Then $\chain_{\mathsf{alert}}^{\lceil \CPLen} \preceq \chain_{\mathsf{join}}$.
+
+        \item The index value $i^*$ set in Line~\ref{code:join-proc-i} of its joining procedure \textsf{JoinProc} satisfies $i^* \ge 1$.
+
+        \item When the joining party becomes alert, it will report a logical clock that is at most \maxskew-rounds apart from any other alert party that is in the same interval.
+    \end{enumerate}
+\end{lemma}
+
+\begin{proof}
+    Regarding claim(a), notice that the heaviest chain selection rule used in \textsf{SelectChain} (\cref{protocol:select-chain}) does not involve the local time \localTime of the party executing it.
+    %
+    $\party_{\mathsf{join}}$ and $\party_{\mathsf{alert}}$ would make the same decision except that $\party_{\mathsf{join}}$ may consider and adopt those chains in the \futureChains set of $\party_{\mathsf{alert}}$.
+    %
+    Therefore, it suffices to show that no chain with future timestamps and more accumulated difficulties than $\chain_{\mathsf{alert}}$ can have a fork from $\chain_{\mathsf{alert}}$ that is too earlier with respect to $r'$.
+
+    Assume at nominal round $r'$, $\party_{\mathsf{join}}$ is in Phase C or D holding a chain $\chain_{\mathsf{join}}$ such that $\chainDiff{\chain_{\mathsf{join}}} > \chainDiff{\chain_{\mathsf{alert}}}$ and $\chain_{\mathsf{alert}}^{\lceil \CPLen} \not\preceq \chain_{\mathsf{join}}$.
+    %
+    Consider a \emph{virtual execution} for party $\party_{\mathsf{alert}}$ (cf.~\cite{CCS:BGKRZ18}).
+    %
+    This is an artificial random experiment that consists of the execution of the protocol with an additional ``virtual'' party $\party_{\mathsf{virt}}$ that participates from the beginning, and is always alert.
+    %
+    $\party_{\mathsf{virt}}$ does not query the random oracle thus is passive.
+    %
+    Starting from the point of execution where $\party_{\mathsf{join}}$ joins the system, $\party_{\mathsf{virt}}$ advances exactly like $\party_{\mathsf{join}}$ and receives the same messages in the same round and order as $\party_{\mathsf{join}}$.
+    %
+    When $\party_{\mathsf{join}}$ adopts a chain $\chain_{\mathsf{join}}$ that $\party_{\mathsf{virt}}$ does not adopt at nominal round $r'$, since it contains more difficulties, we have $\chain_{\mathsf{join}} \in \mathcal{S}_{r'}$.
+    %
+    By~\cref{lemma:commonprefix} we know that the creation time of $\chainHead{\chain_{\mathsf{join}} \cap \chain_{\mathsf{virt}}}$ is larger than $r' - (\ell + 2\delay + 2\maxskew)$.
+    %
+    With the similar argument in~\cref{corollary:common-prefix-parameter} (note that a chain received by $\party_{\mathsf{virt}}$ will be considered by $\party_{\mathsf{alert}}$ within $(\delay + \maxskew)$ nominal rounds) we get $\chain_{\mathsf{alert}}^{\lceil \CPLen} \preceq \chain_{\mathsf{join}}$.
+
+    Moving to claim(b), in order to prove $i^* \ge 1$, we show that $\party_{\mathsf{join}}$ has observed at least one full synchronization interval that started at least $t_{\mathsf{pre}}$ rounds after the beginning of Phase C.
+    %
+    Let $r_{\mathsf{start}}^{(j)}$ denote the nominal time such that at least one alert party passes local round \protocolTime{j}{(j - 1) \cdot \syncLen + K} (in other words, enters the beacon mining and inclusion phase w.r.t. interval $j$).
+    %
+    Since $\textsc{GoodSkew}(r - 1)$ and $\textsc{GoodShift}(r - 1)$ holds, we have
+    %
+    \[ r_{\mathsf{start}}^{(j + 1)} - r_{\mathsf{start}}^{(j)} \le \syncLen + 3\maxskew. \]
+    %
+    Let $i^*$ denote the minimal $i$ such that $r_{\mathsf{start}}^{(i)} \ge t_{\mathsf{join}} + t_{\mathsf{off}} + t_{\mathsf{pre}}$ where $t_{\mathsf{join}}$ is the nominal time such that $\party_{\mathsf{join}}$ start to run \textsf{JoinProc}.
+    %
+    In other words, $r_{\mathsf{start}}^{(i^*)}$ occurs at least $t_{\mathsf{pre}}$ rounds after the beginning of $\party_{\mathsf{join}}$'s Phase C.
+    %
+    We have
+    %
+    \[ r_{\mathsf{start}}^{(i^*)} \le t_{\mathsf{join}} + t_{\mathsf{off}} + t_{\mathsf{pre}} + \syncLen + 3\maxskew \le t_{\mathsf{join}} + t_{\mathsf{off}} + t_{\mathsf{gather}} - \syncLen. \]
+    %
+    The first inequality comes from the upper bound on the distance of $r_{\mathsf{start}}^{(j)}$ and $r_{\mathsf{start}}^{(j + 1)}$; the next inequality follows from the values of $t_{\mathsf{gather}}$ and $t_{\mathsf{pre}}$.
+
+    Since the length of a beacon mining and inclusion phase is $\syncLen - 2\CPLen$, $r_{\mathsf{start}}^{(i^*)}$ is at least \syncLen nominal rounds before the end of Phase C.
+    %
+    On the other hand, it takes at most $\delay + \maxskew$ rounds to diffuse the beacons.
+    %
+    $\party_{\mathsf{join}}$ will record the arrival time of all beacons in interval $i^*$.
+    %
+    Note that the length of $t_{\mathsf{pre}}$ and the upper bound on duration of pre-mining stage in~\cref{lemma:beacon-pre-mining} guarantees that the adversary cannot produce valid beacons w.r.t. interval $i^*$ before the beginning of Phase C.
+
+    Finally, for claim(c), we show that every time $\party_{\mathsf{join}}$ will adopt the same beacon set as $\party_{\mathsf{alert}}$ to update its local clock, and then they will update to a local time that maintains a good skew.
+    %
+    Recall that in claim(b) we show that $r_{\mathsf{start}}^{(i^*)}$ is at least \syncLen nominal rounds before the end of Phase C, at the end of Phase C the blocks in beacon mining and inclusion phase w.r.t. interval $i^*$ went into the settled blockchain.
+    %
+    This also concludes that $\party_{\mathsf{join}}$ will use the same beacon set as $\party_{\mathsf{alert}}$.
+    %
+    Regarding $i \ge i^*$ they can be proved in the same way.
+
+    The rest of the proof follows that in~\cref{lemma:goodskew-same-interval}.
+    %
+    Note that in Equation~\eqref{eq:shift-compute}, the new local time after adjustment is irrelevant to its previous local time, hence after the computation, the distance of $\party_{\mathsf{alert}}$ and $\party_{\mathsf{join}}$'s local clocks will differ for at most \maxskew rounds.
+\end{proof}
+
+\lemmagoodskew
+
+\begin{proof}
+    The proof directly follows from~\cref{lemma:goodskew-same-interval,lemma:goodskew-different-interval,lemma:goodskew-new-party}.
+\end{proof}
+
+\begin{theorem} \label{thm:analysis-predicates}
+    For a typical execution in a $(\gamma, M + 2(\ell + 2\delay + 7\maxskew))$-respecting environment, if Condition~\eqref{condition:min-length} and Condition~\eqref{condition:absorb-error} are satisfied, then all predicates in~\cref{def:analysis-predicate} hold.
+\end{theorem}
+
+Finally, we are able to prove our promised goal:
+
+\begin{theorem} \label{thm:clock-properties}
+    Consider an execution of \timekeeper in a $(\gamma, M + 2(\ell + 2\delay + 7\maxskew))$-respecting environment.
+    %
+    If Conditions~\eqref{condition:min-length} and \eqref{condition:absorb-error} are satisfied, then the protocol achieves clock synchronization (\cref{def:clock-properties}) with parameter values
+    %
+    \[ \mathsf{Skew} = 2\maxskew, \quad \mathsf{shiftLB} = 3\maxskew / \syncLen, \quad \mathsf{shiftUB} = 2\maxskew / \syncLen, \]
+    %
+    except with probability negligibly small in $\kappa$ and $\lambda$.
+\end{theorem}
+
+\begin{proof}
+    The proof of bounded skews and the value of $\mathsf{Skew}$ directly follow from~\cref{lemma:goodskew}.
+    %
+    Regarding linear envelope, consider a nominal round $r > \syncLen$ and an alert party $\party \in \partyset_{\mathsf{alert}}[r]$.
+    %
+    Consider a \emph{virtual execution} for party $\party_{\mathsf{alert}}$ (cf.~\cite{CCS:BGKRZ18}) with an additional party $\party_{\mathsf{virt}}$ who keeps alert from the beginning of the execution.
+    %
+    Intuitively, the largest local time of $\party_{\mathsf{virt}}$ is achieved when $\party_{\mathsf{virt}}$ keeps skipping \maxskew rounds at the beginning of each interval; the lowest local time will be reported when $\party_{\mathsf{virt}}$ always set backward his local time for $2\maxskew$ rounds instead.
+    %
+    In other words, when the local clock of $\party_{\mathsf{virt}}$ passes one interval, the nominal time elapsed is bounded by $\syncLen - \maxskew$ and $\syncLen + 2\maxskew$.
+    %
+    Now, consider the local time \round that $\party_{\mathsf{alert}}$ will report at nominal round $r$.
+    %
+    We have
+    %
+    \[ r - 2\maxskew \cdot \Big\lceil \frac{r - \syncLen}{\syncLen + 2\maxskew} \Big\rceil \le \round \le r + \maxskew \cdot \Big\lceil \frac{r - \syncLen}{\syncLen - \maxskew} \Big\rceil. \]
+    %
+    Note that there is no adjustment at the beginning of first interval.
+    %
+    By dropping the ceil and rearranging we get
+    %
+    \[ \frac{1}{1 + 3\maxskew / \syncLen} \cdot r \le \round \le  \frac{1}{1 - 2\maxskew / \syncLen} \cdot r. \]
+    %
+    We then conclude an alert party's local clock stays in the $(U, L)$-linear envelope with parameters $\mathsf{shiftLB} = 3\maxskew / \syncLen$ and $\mathsf{shiftUB} = 2\maxskew / \syncLen$.
+\end{proof}

@@ -1,0 +1,233 @@
+\subsection{Notation, Definitions and Preliminary Propositions}
+\label{subsec:analysis-preliminaries}
+
+We note that several of the analytical tools proposed in~\cite{C:GarKiaLeo17,EPRINT:GarKiaLeo20} do not directly apply in the environment (with \funcImpClock) where \timekeeper runs in.
+%
+Therefore, we first extend and enhance these tools to adapt them to this new environment.
+
+Our probability space is over all executions of length at most some polynomial in $\kappa$ and $\lambda$; we use \Pr to denote the probability measure of this space.
+%
+Furthermore, let \E be a random variable taking values on this space and with a distribution induced by the random coins of all entities (adversary, environment, parties) and the random oracle.
+
+For the sake of convenience, we define a \emph{nominal time} that coincides with the internal variable $\tau_\sid$ in \funcImpClock.
+%
+Recall that $\tau_\sid$ aims at recording how many times the functionality sends clock ticks to all registered honest parties.
+
+\begin{definition}
+    [Nominal Time]
+    \label{def:nominal-time}
+
+    Given an execution of \timekeeper, any prefix of the execution can be mapped deterministically to an integer $r$, which we call \emph{nominal time}, as follows:
+    %
+    $r$ is the value of variable $\tau_\sid$ in the clock functionality at the final step of the execution prefix which is obtained by parsing the prefix from the genesis block and keeping track of the honest party set registered with the clock functionality (bootstrapped with the set of inaugural alert parties).
+    %
+    (In case no honest party exists in the execution, $r$ is undefined).
+\end{definition}
+
+Note that we adopt $r$ to denote the nominal time, which is different from the protocol timestamp \protocolTime{\interval}{\round}.
+
+If at a nominal round $r$ exactly $h$ parties query the oracle with target $T$, the probability of at least one of them will succeed is
+%
+\[ f(T, h) = 1 - (1 - p T)^h \le p T h, ~\text{where}~ p = 1 / 2^\kappa. \]
+%
+During nominal round $r$, alert parties might be querying the random oracle for various targets.
+%
+We denote by $T_r^{\min}$ and $T_r^{\max}$ the minimum and maximum of those targets.
+%
+Moreover, the initial target $T_0$ implies in our model an initial estimate of the number of honest RO queries $h_0$; specifically, $h_0 = 2^\kappa \varLambda_{\mathsf{epoch}} / (T_0 \cdot \diffLen)$, i.e., the number of parties it takes to produce $\varLambda_{\mathsf{epoch}}$ blocks of difficulty $1 / T_0$ in time \diffLen.
+%
+For convenience, we denote $f_0 = f(T_0, h_0)$ and simply refer to it as $f$.
+%
+Also note that the ideal number of blocks $\varLambda_{\mathsf{epoch}} = \diffLen f$, so in the analysis we will use $\diffLen f$ to represent $\varLambda_{\mathsf{epoch}}$.
+
+\paragraph{``Good'' properties.}
+%
+Next, we present some definitions which will allow us to introduce a few (``good'') properties, serving as an intermediate step towards proving the desired clock properties.
+
+Let us consider the boundary of two target recalculation epochs.
+%
+Recall that Bitcoin's target recalculation algorithm defines epoch in terms of the number of blocks ($m$ blocks forms an epoch).
+%
+Thus, a block with block height a multiple of $m$ is the last block of an epoch.
+%
+While it might be manipulated, its timestamp naturally becomes the proof that miners have adjusted their difficulty and entered the next epoch (known as the \emph{target recalculation point}~\cite{C:GarKiaLeo17}).
+%
+In contrast, \timekeeper adopts a new target recalculation function (see~\cref{subsec:target-recalculation-function}) that divides the epoch based on the parties' local view.
+%
+While we can still define a target recalculation point based on one party's local view, parties can \emph{never} agree on a point where they enter the next epoch based on nominal time.
+
+In order to circumvent the above obstacle, we extend the notion of target recalculation point to target recalculation \emph{zone}.
+%
+See~\cref{fig:target-recalculation-zone} for an illustration.
+%
+Intuitively, a ``target recalculation zone'' w.r.t. epoch \epoch is a sequence of consecutive nominal rounds such that during these nominal rounds, at least one alert party crosses its own target recalculation point w.r.t. epoch \epoch.
+%
+For convenience, we assume a ``safe'' start---i.e., the first epoch also has a target recalculation zone, and it naturally satisfies all good properties we will later define.
+
+\input{figures/target-recalc-zone}
+
+\begin{definition}
+    \begin{enumerate}[label=\FlatSteel, leftmargin=*, nosep]
+        \item Nominal time $r$ is \emph{good} if $f / 2\gamma^2 \le p h_r T_r^{\min}$ and $p h_r T_r^{\max} \le (1 + \delta)\gamma^2 f$.
+
+        \item Round \protocolTime{\interval}{\round} is a \emph{target-recalculation point w.r.t. epoch} \epoch if $(\round = \interval \cdot R) \wedge [\interval \mod  \allowbreak (\diffLen / \syncLen) = 0]$.
+
+        \item A sequence of consecutive nominal rounds $Z_\epoch = \{ r_i, \ldots, r_j \}$ is a \emph{target recalculation zone w.r.t. target recalculation epoch} \epoch if during $Z_\epoch$ some subset of synchronized parties are in the logical round that is a target recalculation point w.r.t. $\epoch - 1$.
+
+        \item A target-recalculation zone $Z_\epoch$ is \emph{good} if for all $h_r, r \in Z_\epoch$ the target $T_\epoch$ satisfies $f / 2\gamma \le p h_r T_\epoch \le (1 + \delta)\gamma f$.
+
+        \item A chain is \emph{good} if all its target-recalculation zones are good.
+
+        \item A chain is \emph{stale} if for some nominal time $u$ it does not contain an honest block computed after nominal time $u - \ell - 2\delay - 2\maxskew$.
+
+        \item The \emph{blocklength} of an epoch \epoch on a chain \chain is the number of blocks in \chain with timestamp \protocolTime{\interval}{\cdot} such that $\mathsf{TargetRecalcEpoch}(\protocolTime{\interval}{\round}) = \epoch$.
+    \end{enumerate}
+\end{definition}
+
+We would like to prove that, at a certain nominal round $r$ of the protocol execution, alert parties enjoy good properties on their local chains and reported timestamps.
+%
+Towards this goal, we extract all chains that either belong to alert parties at $r$ or have accumulated sufficient difficulty and thus might be adopted in the future.
+%
+We denote this chain set by $\mathcal{S}_r$:
+%
+\begin{equation*}
+    \mathcal{S}_r \triangleq
+    \left\{
+    \chain \in E_r
+    \left|
+    \begin{aligned}
+         & \text{``\chain belongs to an alert party'' or}                                                                                    \\
+         & \text{``}\exists \chain'\in E_r ~\text{that belongs to an alert party and}~ \chainDiff{\chain} > \chainDiff{\chain'} \text{'' or} \\
+         & \text{``}\exists \chain'\in E_r ~\text{that belongs to an alert party and}~ \chainDiff{\chain} = \chainDiff{\chain'}              \\
+         & \hspace{1in} \text{and \chainHead{\chain} was computed no later than \chainHead{\chain'}''}
+    \end{aligned}
+    \right.
+    \right\}.
+\end{equation*}
+
+Next, we define a series of useful predicates with respect to the potential chain set $\mathcal{S}_r$ and parties' local clocks at nominal round $r$.
+%
+Note that \maxskew is a constant that is the ideal maximal skew of all alert clocks, and $\maxskew = \delay + \maxdrift$ where \delay is the network delay and \maxdrift is the maximal clock drift that \adv can set (see~\cref{subsec:imperfect-local-clock}).
+
+\begin{definition} \label{def:analysis-predicate}
+    For a nominal round $r$, let:
+    %
+    \begin{cccItemize}[nosep]
+        \item $\textsc{GoodChains}(r) \triangleq$ ``For all $u \le r$, every chain in $\mathcal{S}_u$ is good.''
+
+        \item $\textsc{GoodRound}(r) \triangleq$ ``All rounds $u \le r$ are good.''
+
+        \item $\textsc{NoStaleChains}(r) \triangleq$ ``For all $u \le r$, there are no stale chains in $\mathcal{S}_u$.''
+
+        \item $\textsc{CommonPrefix}(r) \triangleq$ ``For all $u \le r$ and $\chain, \chain' \in \mathcal{S}_r$, \chainHead{\chain \cap \chain'} was created after nominal round $u - \ell - 2\delay - 2\maxskew$.''
+
+        \item $\textsc{BlockLength}(r) \triangleq$ ``For all $u < r$ and $\chain \in \mathcal{S}_u$, the blocklength $\varLambda$ of any epoch \epoch in \chain satisfies $\frac{1}{2(1 + \delta)\gamma^2} \cdot \diffLen f \le \varLambda \le 2(1 + \delta)\gamma^2 \cdot \diffLen f$
+
+        \item $\textsc{GoodBeacons}(r) \triangleq$ ``For all $u < r$ and the beacon set $\mathcal{S}_{\interval}$ bookkeeped during any interval \interval, more than half of beacons within $\mathcal{S}_{\interval}$ are generated by honest parties''.
+
+        \item $\textsc{GoodShift}(r) \triangleq$ ``For all $u < r$, and the alert party $\party_i$ that adjusts its local clock at round $u$, $\party_i$ computes $\shift_i$ that $-2\maxskew \le \shift_i \le \maxskew$''.
+
+        \item $\textsc{GoodSkew}(r) \triangleq$ ``For all alert parties in nominal time $r$, their local time in this round differs by at most \maxskew if they are in the same interval or differs by at most $2\maxskew$ if they are in different intervals.''
+        %
+        Formally,
+        %
+        \begin{equation*}
+            \textsc{GoodSkew}(r) : \Leftrightarrow
+            \left(
+            \forall \party_1, \party_2 \in \partyset_{\mathsf{alert}}[r]:
+            \left|
+            \begin{aligned}
+                 & | \round_1 - \round_2 | \le \maxskew  \\
+                 & | \round_1 - \round_2 | \le 2\maxskew
+            \end{aligned}
+            \right.
+            ~~
+            \left.
+            \begin{aligned}
+                 & \text{if}~ \interval_1 = \interval_2    \\
+                 & \text{if}~ \interval_1 \neq \interval_2
+            \end{aligned}
+            \right.
+            \right)
+        \end{equation*}
+        %
+        where \protocolTime{\interval_1}{\round_1} and \protocolTime{\interval_2}{\round_2} are the timestamps that $\party_1$ and $\party_2$ reports during $r$\footnote{If \party passes multiple local rounds in nominal round $r$, we require that all of these timestamps should satisfy the predicate.}.
+    \end{cccItemize}
+\end{definition}
+
+\paragraph{Random variables and $(\delay, \maxskew)$-isolated success.}
+%
+Next, for the purpose of estimating the difficulty acquired by honest parties during a sequence of rounds, we define the following random variables w.r.t. nominal round $r$.
+%
+\begin{cccItemize}[noitemsep]
+    \item $D_r$: the sum of the difficulties of all blocks computed by alert parties at nominal round $r$.
+
+    \item $Y_r$: the maximum difficulty among all blocks computed by alert parties at nominal round $r$.
+
+    \item $Q_r$: equal to $Y_r$ when $D_u = 0$ for all $r < u < r + \delay + \maxskew$ and 0 otherwise.
+\end{cccItemize}
+%
+We call a nominal round $r$ such that $D_r > 0$ \emph{successful} and one wherein $Q_r > 0$ \emph{isolated successful}.
+%
+An isolated successful round guarantees the irreversible progress of the honest parties.
+
+We highlight that, under the imperfect local clock model \funcImpClock, the notion of an ``isolated successful round'' needs to be re-considered as parties' local clocks may span some consecutive rounds.
+%
+Assuming a \maxskew-drift is maintained during the sequence of rounds we are interested in, an irreversible contribution to the chain happens when the (nominal) distance between such success and the following success is at least $\maxskew + \delay$ rounds.
+%
+This is because the block producer may have a local clock that is already \maxskew rounds behind other alert parties, and it takes \delay rounds to diffuse the block.
+%
+This cancels out other parties' successes for up to $\maxskew + \delay$ rounds.
+%
+As a result, we call such event a \emph{$(\delay, \maxskew)$-isolated successful}, which is for the new formulation of $Q_r$ (cf.~\cite{EPRINT:GarKiaLeo20}).
+%
+Note that this $(\delay, \maxskew)$-isolated successful round is meaningful only when the protocol is able to maintain a \maxskew-bounded skew during the sequence of rounds we are considering.
+
+Recall that the total number of hash queries alert parties (resp., the adversary) can make during nominal round $r$ is denoted by $h_r$ (resp., $t_r$).
+%
+For a sequence of rounds $S$ we write $n(S) = \sum_{r \in S} n_r$ and similarly, $t(S), D(S), Q(S)$.
+
+Regarding the adversary \adv, while \adv may query the random oracle for an arbitrarily low target and obtain blocks with arbitrarily high difficulty, we wish to upper-bound the difficulty it can accrue during a set of $J$ queries.
+%
+Consider a set of consecutive adversarial queries $J$ and associate it with the target of the first query (this target is denoted by $T(J)$).
+%
+We define $A(J)$ and $B(J)$ to be equal to the sum of the difficulties of all blocks computed by the adversary during queries in $J$ for target at least $T(J) / \tau$ and $T(J)$, respectively.
+
+Let $\E_{r - 1}$ fix the execution just before (nominal) round $r$.
+%
+In particular, a value $E_{r - 1}$ of $\E_{r - 1}$ determines the adversarial strategy and so determines the targets against which every party will query the oracle at round $r$ and the number of parties $h_r$ and $t_r$, but it does not determine $D_r$ or $Q_r$.
+%
+For an adversarial query $j$ we will write $\E_{j - 1}$ for the execution just before this query.
+
+\paragraph{Blockchain properties.}
+%
+We use blockchain properties as formulated in~\cite{EC:GarKiaLeo15,C:GarKiaLeo17} as an intermediate step towards proving the clock properties and achieve our blockchain synchronizer.
+%
+Next, we briefly describe these properties: common prefix, chain growth, chain quality and existential chain quality.
+
+Notably, we consider common prefix in terms of number of rounds.
+%
+I.e., honest parties will agree on a settled part of the blockchain with timestamps at most a given number of rounds before their local time.\footnote{While most of the previous work considers common prefix in terms of number of blocks, we note that these two definitions are equivalent. This is due to the fact that if the protocol guarantees security, then the block generation rate is somewhat steady (cf. \cite{C:GarKiaLeo17}) and thus the number of blocks generated during a period of time can be inferred from its length and the highest mining speed.}
+%
+Let $\chain^{\lceil k}$ denote the chain resulting from removing all rightmost blocks with timestamp larger than $\round - k$, where $\round$ is the current (local) time.
+%
+We can now define common prefix as follows (we will quantify $k$ in~\cref{corollary:common-prefix-parameter}).
+%
+\begin{cccItemize}[noitemsep]
+    \item \textbf{Common Prefix (with parameter $k \in \mathbb{N}$).} For any two alert parties $\party_1, \party_2$ holding chains $\chain_1, \chain_2$ at rounds $r_1, r_2$, with $r_1 \le r_2$, it holds that $\chain_1^{\lceil k} \preccurlyeq \chain_2$.
+\end{cccItemize}
+
+Regarding chain growth, the lemma below provides a lower bound on the irreversible progress of achieved by the honest parties regardless of any adversarial behavior.
+%
+This lemma has appeared in previous analyses under varying settings, evolving from the synchronous network and static environment (\cite{EC:GarKiaLeo15}), to a dynamic environment (\cite{C:GarKiaLeo17}), and further to a bounded-delay network setting (\cite{EPRINT:GarKiaLeo20}).
+%
+The next lemma extends the chain growth property to a \delay-bounded network delay, \maxskew-bounded clock drift and dynamic environment.
+
+\begin{lemma}
+    [Chain Growth]
+    \label{lemma:chain-growth}
+
+    Suppose that at nominal round $u$ of an execution $E$ an honest party diffuses a chain of difficulty $d$.
+    %
+    Then, by (nominal) round $v$, every honest party has received a chain of difficulty at least $d + Q(S)$, where $S = [u + \delay + \maxskew, v - \delay - \maxskew]$.
+\end{lemma}

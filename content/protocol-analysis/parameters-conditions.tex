@@ -1,0 +1,38 @@
+\subsection{Protocol Parameters and Their Conditions}
+\label{subsec:protocl-params-conditions}
+
+We summarize all \timekeeper parameters in~\cref{table:protocol-params} in~\cref{sec:glossary}.
+%
+It is worth noting that $\epsilon$ is a small constant regarding the quality of
+concentration of random variables (it will appear in the typical executions in~\cref{subsec:typical-exeuctions}).
+%
+We introduce a parameter $\lambda$---which is related to the properties of the protocol---to simplify several expressions.
+%
+Protocol parameter $\lambda$ and the RO output length $\kappa$ are the security parameters of \timekeeper.
+
+In order to get desired convergence and perform meaningful analysis, we consider
+a sufficiently long consecutive sequence of at least
+%
+\begin{equation} \label{eq:ell-length}
+    \ell = \frac{4(1 + 3\epsilon)}{\epsilon^2 f [1 - (1 + \delta) \gamma^2 f]^{\delay + \maxskew + 1}} \cdot \max \{\delay + \maxskew, \tau\} \cdot \gamma^3 \cdot \lambda
+\end{equation}
+%
+consecutive rounds.
+
+We are now ready to discuss the conditions that protocol parameters should satisfy.
+%
+We first quantify the length of a clock synchronization interval \syncLen, the length of a target recalculation interval \diffLen and the length of the convergence phase \CPLen.
+%
+Specifically, we let one target recalculation epoch consists of 4 clock synchronization intervals, i.e., $\diffLen = 4 \syncLen$; we set $\CPLen = \ell + 2\delay + 4\maxskew$ (this will coincide with our common prefix parameter and thus provide some desired properties; see~\cref {corollary:common-prefix-parameter}).
+
+Next, we will require that $\ell$ (defined in~\cref{eq:ell-length}) is appropriately small compared to the length of an epoch and of an interval (note that $\diffLen = 4 \syncLen$).
+%
+\begin{equation*} \label{condition:min-length} \tag{C1}
+    \ell + 2\delay + 7\maxskew \le \epsilon \diffLen / (4 \gamma) = \epsilon \syncLen / \gamma.
+\end{equation*}
+%
+Further, we require that the advantage of the honest parties is large enough to absorb the errors introduced by $\epsilon$ (from the concentration of random variables) and $[1 - (1 + \delta) \gamma^2 f]^{\delay + \maxskew}$ (from the network delay and clock skews).
+%
+\begin{equation*} \label{condition:absorb-error} \tag{C2}
+    [1 - (1 + \delta) \gamma^2 f]^{\delay + \maxskew} \ge 1 - \epsilon ~~\text{and}~~ \epsilon \le \delta / 12 \le 1 / 12.
+\end{equation*}

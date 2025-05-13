@@ -1,0 +1,73 @@
+\subsection{Proof Roadmap}
+
+In the remainder of this section we present an overview of the analysis.
+%
+Note that the predicates in \cref{def:analysis-predicate} are proved in an inductive way over the space of typical executions in a $(\gamma, s)$-respecting environment.
+
+First, we focus on the steady block generation rate.
+%
+For a warm-up, we argue that an adversarial fork cannot happen too long ago and then extract the common prefix parameter.
+%
+Equipped with this knowledge, we show that if good skews and certain time adjustment calculations are maintained during a target recalculation epoch, the block production rate will be properly controlled in the next epoch.
+
+\begin{restatable*}{lemma}{lemmanostalechains}
+    \label{lemma:nostalechains}
+
+    $\textsc{GoodRound}(r - 1) \Longrightarrow \textsc{NoStaleChains}(r)$.
+\end{restatable*}
+
+\begin{restatable*}{lemma}{lemmacommonprefix}
+    \label{lemma:commonprefix}
+
+    $\textsc{GoodRound}(r - 1) \wedge \textsc{GoodSkew}(r - 1) \Longrightarrow \textsc{CommonPrefix}(r)$.
+\end{restatable*}
+
+\begin{restatable*}{lemma}{lemmablocklength}
+    \label{lemma:blocklength}
+
+    $\textsc{GoodRound}(r - 1) \wedge \textsc{GoodChains}(r - 1) \wedge \textsc{GoodSkew}(r - 1) \wedge \textsc{GoodShift}(r - 1) \Longrightarrow \textsc{BlockLength}(r)$.
+\end{restatable*}
+
+\begin{restatable*}{lemma}{lemmagoodchains}
+    \label{lemma:goodchains}
+
+    $\textsc{GoodRound}(r - 1) \Longrightarrow \textsc{GoodChains}(r)$.
+\end{restatable*}
+
+\begin{restatable*}{corollary}{corollarygoodrounds}
+    \label{corollary:goodrounds}
+
+    $\textsc{GoodRound}(r - 1) \Longrightarrow \textsc{GoodRound}(r)$.
+\end{restatable*}
+
+Next, we move to the properties w.r.t. clocks.
+%
+We argue that if at the onset, the PoW difficult is appropriately set and the steady block generating rate lasts during the whole clock synchronization interval, the beacon set used by parties to update their clock will be identical and the majority of these beacons will be produced and emitted by alert parties.
+%
+For synchronized parties, this good beacon set implies that the differences between alert parties' local clocks are still narrow after they enter the next interval and that the shift value they computed is well-bounded.
+%
+Furthermore, regarding newly joining parties, we also provide an analysis of the joining procedure showing that joining parties starting with no \emph{a-priori} knowledge of the global time, they can listen in and bootstrap their logical clock and become alert parties.
+%
+The above two aspects imply that a bounded skew is maintained over the whole execution.
+
+\begin{restatable*}{lemma}{lemmagoodbeacons}
+    \label{lemma:goodbeacons}
+
+    $\textsc{GoodRound}(r - 1) \Longrightarrow \textsc{GoodBeacons}(r)$.
+\end{restatable*}
+
+\begin{restatable*}{lemma}{lemmagoodshift}
+    \label{lemma:goodshift}
+
+    $\textsc{GoodSkew}(r - 1) \Longrightarrow \textsc{GoodShift}(r)$
+\end{restatable*}
+
+\begin{restatable*}{lemma}{lemmagoodskew}
+    \label{lemma:goodskew}
+
+    $\textsc{GoodSkew}(r - 1) \wedge \textsc{GoodBeacons}(r - 1) \Longrightarrow \textsc{GoodSkew}(r)$.
+\end{restatable*}
+
+To sum up, a ``safe'' start and a $(\gamma, s)$-respecting environment guarantee that good properties can be achieved during the whole execution.
+%
+We work out the related parameters (in~\cref{thm:clock-properties}) and conclude that \timekeeper solves the clock synchronization problem.
