@@ -1,0 +1,57 @@
+\documentclass[11pt,a4paper]{article}
+\special{papersize=210mm,297mm}
+\usepackage[dvips,left=1in,right=1in,top=1in,bottom=1in,nohead,letterpaper]{geometry}
+\usepackage[utf8]{inputenc}
+
+\input{macros}
+
+\title{Permissionless Clock Synchronization with Public Setup\thanks{An abridged version of this paper appears in \textit{Proc. TCC 2022.}}}
+
+\author{
+        Juan Garay\textsuperscript{1},
+        Aggelos Kiayias\textsuperscript{2} and
+        Yu Shen\textsuperscript{3 \orcidlink{0000-0002-4316-8116}}
+}
+
+\affil{
+        \textsuperscript{1}Texas A\&M University,
+        \email{garay@cse.tamu.edu}\\
+        \textsuperscript{2}University of Edinburgh and IOG,
+        \email{aggelos.kiayias@ed.ac.uk}\\
+        \textsuperscript{3}University of Edinburgh,
+        \email{shenyu.tcv@gmail.com}
+}
+
+\date{}\renewcommand\footnotemark{}
+
+\begin{document}
+
+\maketitle
+
+\input{content/abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\input{content/introduction/main}
+\input{content/model/main}
+\input{content/protocol-details/main}
+\input{content/protocol-analysis/main}
+\input{content/acknowledgements}
+
+\bibliographystyle{bibliography/ccc-alphaurl}
+{
+        \small
+        \bibliography{bibliography/cite,bibliography/cryptobib/abbrev0,bibliography/cryptobib/crypto}
+}
+
+\appendix
+
+\input{content/math-facts}
+\input{content/model/model-contd}
+\input{content/full-protocol}
+\input{content/proofs-omitted}
+\input{content/glossary}
+
+\end{document}
