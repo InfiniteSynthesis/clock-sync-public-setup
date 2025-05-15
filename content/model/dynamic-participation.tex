@@ -1,8 +1,6 @@
 \subsection{Dynamic Participation}
 \label{subsec:dynamic-participation}
 
-The notion of a ``respecting environment'' was introduced in~\cite{C:GarKiaLeo17} to model the varying number of participants in a protocol execution.
-%
 In~\cite{CCS:BGKRZ18,EC:BGKRZ21}, the notion of \emph{dynamic participation} was introduced aiming at describing the protocol execution in a more realistic fashion.
 %
 Here we present a further refined classification of possible \emph{types} of honest parties.
@@ -21,7 +19,7 @@ We say \party is \emph{time-aware} if \party is registered with the \emph{imperf
 
 Further, we say \party is \emph{synchronized} if \party has been participating in the protocol for sufficiently long time and achieves a ``synchronized state'' as well as a ``synchronized clock.''
 %
-``Synchronized clock'' means \party holds a chain that shares a common prefix (cf.~\cite{EC:GarKiaLeo15}) with other \emph{synchronized} parties; ``synchronized clock'' refers to that \party maintains a local clock with time close to other \emph{synchronized} parties.
+``Synchronized state'' means \party holds a chain that shares a common prefix (cf.~\cite{EC:GarKiaLeo15}) with other \emph{synchronized} parties; ``synchronized clock'' refers to that \party maintains a local clock with time close to other \emph{synchronized} parties.
 %
 Otherwise, \party is \emph{desynchronized}.
 %
@@ -41,7 +39,9 @@ In addition, we define \emph{active} parties to include all parties that are ale
 
 \paragraph{Respecting environment in terms of computational power.}
 %
-Next, we provide the following generalization of ``respecting environment'' to relate it to computational power as opposed to number of parties.
+The notion of a ``respecting environment'' was introduced in~\cite{C:GarKiaLeo17} to model the varying number of participants in a protocol execution.
+
+We provide the following generalization of ``respecting environment'' to relate it to computational power as opposed to number of parties.
 %
 Our assumption is that during the whole protocol execution, the honest computational power is higher than the adversarial one (cf. the ``honest majority'' condition in~\cite{EC:GarKiaLeo15} and follow-ups).
 %
