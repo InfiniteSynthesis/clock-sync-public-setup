@@ -6,7 +6,9 @@
     \begin{algorithmic}[1]
         \LineComment{The following steps are executed in an $(\textsc{maintain-ledger}, \sid, \text{minerID})$-interruptible manner:}
 
-        \oneLineIf{$\mathtt{isInit} = \false$}{Send $(\textsc{Retrieve}, \sid)$ to \funcCRS and receive $(\textsc{Retrieved}, \mathsf{CRS})$.}
+        \If{$\mathtt{isInit} = \false$}
+        \State{Send $(\textsc{Retrieve}, \sid)$ to \funcCRS and receive $(\textsc{Retrieved}, \mathsf{CRS})$ and set $\mathtt{isInit} \gets \true$.}
+        \EndIf
 
         \If{\isSync and stalled before (and now up and running)}
         \State{Call $\mathsf{SimulateClockAdjustments}(\party, \sid)$}
@@ -46,7 +48,7 @@
         \State{Set $t_{\mathsf{work}} \gets \localTime$}
 
         \oneLineIf{$\round = \interval \cdot \syncLen$}{Call $\mathsf{SyncProcedure}(\party, \sid, R)$}
-        
+
         \EndIf
 
         \State{Call $\textsf{FinishRound}(\party)$ \Comment{Mark normal round actions as finished.}}
