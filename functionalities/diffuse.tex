@@ -9,6 +9,7 @@
       This functionality maintains state variables as follows.
 
       \begin{minipage}{\linewidth}
+            \addtocounter{table}{-1}
             \begin{tabularx}{.9\textwidth}{c  X}
                   \toprule[.3mm]
                   \textbf{State Variable}
@@ -24,11 +25,9 @@
                    & A dynamically updatable list of quadruples $(m, \msgid, D_{\msgid}, \party)$ where $D_{\msgid}$ denotes the fetch counter.
                   \\ \bottomrule[.3mm]
             \end{tabularx}
-            \addtocounter{table}{-1}
       \end{minipage}
 
-      \medskip
-      \paragraph{Setting the delay:}
+      \medskip\paragraph{Setting the delay:}
       %
       \begin{cccItemize}[nosep]
             \item Upon  receiving $(\textsc{set-delay}, \sid, d)$ from the adversary \adv, \textbf{if} \textsc{set-delay} has never been received \textbf{then} set $\delay = d$. Return $(\textsc{set-delay}, \sid, \ok)$ to \adv.
@@ -62,7 +61,7 @@
       \paragraph{Additional adversarial capabilities:}
       %
       \begin{cccItemize}[nosep]
-            \item Upon receiving $(\textsc{diffuse}, \sid, m)$ from some corrupted $\party_s \in \partyset$ (or from \adv on behalf of $\party_s$ if corrupted), 
+            \item Upon receiving $(\textsc{diffuse}, \sid, m)$ from some corrupted $\party_s \in \partyset$ (or from \adv on behalf of $\party_s$ if corrupted),
             % do 
             execute it the same way as an honest-sender diffuse, with the only difference that $\delay_{\msgid_i} = \infty$.
 
